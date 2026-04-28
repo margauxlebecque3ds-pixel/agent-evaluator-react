@@ -92,6 +92,8 @@ const dict = {
     apiKeyLabel: "Entrer votre clé API",
     apiKeyPlaceholder: "sk-…",
     apiKeyHint: "Optionnel — utilise la clé serveur par défaut",
+    saveComment: "Enregistrer",
+    editComment: "Modifier le commentaire",
   }
 }
 
@@ -190,8 +192,8 @@ export default function App() {
           --surface: oklch(0.16 0.028 260 / 0.7);
           --surface-el: oklch(0.21 0.035 260);
           --border: oklch(0.28 0.03 260 / 0.6);
-          --fg: oklch(0.97 0.005 260);
-          --fg2: oklch(0.68 0.02 260);
+          --fg: oklch(1 0 0);
+          --fg2: oklch(0.78 0.02 260);
           --bg-grad1: oklch(0.18 0.08 252);
           --bg-grad3: oklch(0.42 0.14 230);
         }
@@ -200,7 +202,7 @@ export default function App() {
           --surface: oklch(1 0 0 / 0.85);
           --surface-el: oklch(1 0 0);
           --border: oklch(0.88 0.01 260);
-          --fg: oklch(0.18 0.025 260);
+          --fg: oklch(0.12 0.025 260);
           --fg2: oklch(0.45 0.02 260);
           --bg-grad1: oklch(0.92 0.06 240);
           --bg-grad3: oklch(0.85 0.09 220);
@@ -419,7 +421,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
             placeholder={t.apiKeyPlaceholder}
-            style={{ width: "100%", background: "color-mix(in oklab, var(--surface) 60%, transparent)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 16px", color: "var(--fg)", fontSize: "0.9rem", outline: "none", fontFamily: "monospace", transition: "border-color 0.15s, box-shadow 0.15s", backdropFilter: "blur(12px)" }}
+            style={{ width: "100%", background: "color-mix(in oklab, var(--surface-el) 75%, transparent)", backdropFilter: "blur(24px) saturate(160%)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 16px", color: "white", fontSize: "0.9rem", outline: "none", fontFamily: "monospace", transition: "border-color 0.15s, box-shadow 0.15s" }}
             onFocus={e => { e.target.style.borderColor = "var(--primary)"; e.target.style.boxShadow = "0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent)" }}
             onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none" }}
           />
@@ -448,7 +450,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
           {mode === "single" ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <FieldLabel label={t.userQuestion}>
-                <textarea value={userQuestion} onChange={e => setUserQuestion(e.target.value)} placeholder={t.userQuestionPlaceholder} rows={3} className="textarea-base" />
+                <textarea value={userQuestion} onChange={e => setUserQuestion(e.target.value)} placeholder={t.userQuestionPlaceholder} rows={1} className="textarea-base" style={{ minHeight: 48 }} />
               </FieldLabel>
               <FieldLabel label={t.leoResponse}>
                 <textarea value={leoResponse} onChange={e => setLeoResponse(e.target.value)} placeholder={t.leoResponsePlaceholder} rows={6} className="textarea-base" />
@@ -637,14 +639,35 @@ function Toolbar({ t, showComment, setShowComment, comment, images, fileRef, add
 }
 
 function CommentBox({ t, value, onChange }) {
+  const [saved, setSaved] = useState(false)
+  const saveLabel = t.saveComment || "Save"
+  const editLabel = t.editComment || "Edit comment"
+
   return (
     <div style={{ marginTop: 12, borderRadius: 12, border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)", background: "color-mix(in oklab, var(--primary) 5%, transparent)", padding: 12 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <span style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--primary)", opacity: 0.8 }}>{t.addComment}</span>
-        {value && <button type="button" onClick={() => onChange("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex" }}><X size={13} /></button>}
+        <div style={{ display: "flex", gap: 6 }}>
+          {!saved ? (
+            <button type="button" onClick={() => { if (value.trim()) setSaved(true) }}
+              style={{ background: "var(--primary)", border: "none", cursor: "pointer", color: "white", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600, fontFamily: "inherit" }}>
+              {saveLabel}
+            </button>
+          ) : (
+            <button type="button" onClick={() => setSaved(false)}
+              style={{ background: "none", border: "1px solid var(--border)", cursor: "pointer", color: "var(--fg2)", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 500, fontFamily: "inherit" }}>
+              {editLabel}
+            </button>
+          )}
+          {!saved && value && <button type="button" onClick={() => { onChange(""); setSaved(false) }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex" }}><X size={13} /></button>}
+        </div>
       </div>
-      <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={t.commentPlaceholder} rows={2} autoFocus
-        style={{ width: "100%", background: "none", border: "none", outline: "none", resize: "none", fontSize: "0.85rem", color: "var(--fg)", fontFamily: "inherit", lineHeight: 1.5 }} />
+      {saved ? (
+        <p style={{ fontSize: "0.85rem", color: "white", lineHeight: 1.5, margin: 0 }}>{value}</p>
+      ) : (
+        <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={t.commentPlaceholder} rows={2} autoFocus
+          style={{ width: "100%", background: "none", border: "none", outline: "none", resize: "none", fontSize: "0.85rem", color: "white", fontFamily: "inherit", lineHeight: 1.5 }} />
+      )}
     </div>
   )
 }
