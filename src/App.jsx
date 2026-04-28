@@ -12,7 +12,7 @@ import { exportEvaluationToExcel } from "./export"
 const dict = {
   en: {
     heroTitle: "UX Evaluation of Virtual Companion responses",
-    heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
+    // heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
     seeHeuristics: "See the heuristics list",
     backToEval: "Back to evaluation",
     downloadPdf: "Download PDF",
@@ -60,7 +60,7 @@ const dict = {
   },
   fr: {
     heroTitle: "Évaluation UX des réponses du Virtual Companion",
-    heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
+    // heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
     seeHeuristics: "Voir la liste des heuristiques",
     backToEval: "Retour à l'évaluation",
     downloadPdf: "Télécharger le PDF",
@@ -439,7 +439,7 @@ function VCLogos() {
           transform: visible[i] ? "translateY(0)" : "translateY(16px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}>
-          <img src={logo.src} alt={logo.name} style={{ height: 40, width: 40, objectFit: "contain" }} />
+          <img src={logo.src} alt={logo.name} style={{ height: 80, width: 80, objectFit: "contain" }} />
         </div>
       ))}
     </div>
@@ -474,7 +474,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
                 {t.heroSubtitle}
               </p>
               <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6 }}>
-                {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses — evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA — en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
+                {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses by evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
               </p>
               <button onClick={() => setPage("heuristics")} style={{ marginTop: 16, borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.2)"; e.currentTarget.style.borderColor = "rgba(59,130,246,1)" }}
