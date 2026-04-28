@@ -185,7 +185,7 @@ export default function App() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         
         :root {
@@ -220,7 +220,7 @@ export default function App() {
         }
 
         body {
-          font-family: 'IBM Plex Sans', system-ui, sans-serif;
+          font-family: 'Manrope', system-ui, sans-serif;
           background: 
             radial-gradient(ellipse 80% 60% at 100% 50%, var(--bg-grad3) 0%, transparent 55%),
             radial-gradient(ellipse 70% 70% at 0% 0%, var(--bg-grad1) 0%, transparent 60%),
