@@ -466,7 +466,8 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <div style={{ marginBottom: 20 }}>
           <div className="glass" style={{ display: "inline-flex", borderRadius: 999, padding: 4, gap: 4 }}>
             {[["single", MessageSquare, t.modeSingle], ["multi", MessagesSquare, t.modeMulti]].map(([m, Icon, label]) => (
-              <button key={m} onClick={() => { setMode(m); reset() }} style={{
+              <div key={m} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button onClick={() => { setMode(m); reset() }} style={{
                 borderRadius: 999, padding: "8px 20px", fontSize: "0.85rem", fontWeight: 500,
                 border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: "inherit",
                 background: mode === m ? "var(--primary)" : "transparent",
@@ -477,6 +478,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
                 <Icon size={15} /> {label}
               </button>
               <Tooltip text={m === "single" ? t.modeSingleTooltip : t.modeMultiTooltip} />
+            </div>
             ))}
           </div>
         </div>
