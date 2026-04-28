@@ -185,7 +185,7 @@ export default function App() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         
         :root {
@@ -220,7 +220,7 @@ export default function App() {
         }
 
         body {
-          font-family: 'Manrope', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           background: 
             radial-gradient(ellipse 80% 60% at 100% 50%, var(--bg-grad3) 0%, transparent 55%),
             radial-gradient(ellipse 70% 70% at 0% 0%, var(--bg-grad1) 0%, transparent 60%),
@@ -432,7 +432,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Manrope', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
+              <h1 style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
                 {t.heroTitle}
               </h1>
               <p style={{ marginTop: 10, color: "var(--fg2)", fontSize: "0.9rem", lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
