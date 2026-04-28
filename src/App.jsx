@@ -432,7 +432,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 700, lineHeight: 1.05, letterSpacing: "-0.03em" }}>
+              <h1 style={{ fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 700, lineHeight: 1.05, letterSpacing: "-0.03em", fontFamily: "'Manrope', sans-serif" }}>
                 {t.heroTitle}
               </h1>
               <p style={{ marginTop: 10, color: "var(--fg2)", fontSize: "0.9rem", lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
