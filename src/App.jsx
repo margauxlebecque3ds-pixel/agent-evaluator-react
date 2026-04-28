@@ -431,7 +431,7 @@ function VCLogos() {
   }, [])
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 20 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       {logos.map((logo, i) => (
         <div key={logo.name} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
@@ -439,8 +439,7 @@ function VCLogos() {
           transform: visible[i] ? "translateY(0)" : "translateY(16px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}>
-          <img src={logo.src} alt={logo.name} style={{ height: 64, width: 64, objectFit: "contain" }} />
-          <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", color: "var(--fg2)", textTransform: "uppercase" }}>{logo.name}</span>
+          <img src={logo.src} alt={logo.name} style={{ height: 40, width: 40, objectFit: "contain" }} />
         </div>
       ))}
     </div>
@@ -465,16 +464,18 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
-                {t.heroTitle}
-              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.6rem)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
+                  {t.heroTitle}
+                </h1>
+                <VCLogos />
+              </div>
               <p style={{ marginTop: 10, color: "var(--fg2)", fontSize: "0.9rem", lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {t.heroSubtitle}
               </p>
               <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6 }}>
                 {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses — evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA — en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
               </p>
-              <VCLogos />
               <button onClick={() => setPage("heuristics")} style={{ marginTop: 16, borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.2)"; e.currentTarget.style.borderColor = "rgba(59,130,246,1)" }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.12)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.7)" }}>
@@ -652,7 +653,7 @@ function HeuristicsPage({ t, lang, changeLang, theme, toggleTheme, isDark, setPa
           <div className="glass" style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "4px 14px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--fg2)", marginBottom: 16 }}>
             <FileText size={11} style={{ color: "var(--primary)" }} /> {t.reference}
           </div>
-          <h1 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{t.heuristicsPageTitle}</h1>
+          <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.8rem)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{t.heuristicsPageTitle}</h1>
           <p style={{ marginTop: 14, fontSize: "1rem", color: "var(--fg2)", lineHeight: 1.6 }}>{t.heuristicsPageSubtitle}</p>
         </header>
 
