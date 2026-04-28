@@ -11,7 +11,7 @@ import { exportEvaluationToExcel } from "./export"
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const dict = {
   en: {
-    heroTitle: "Evaluate LEO's responses",
+    heroTitle: "UX Evaluation of Virtual Companion responses",
     heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
     seeHeuristics: "See the heuristics list",
     backToEval: "Back to evaluation",
@@ -59,7 +59,7 @@ const dict = {
     editComment: "Edit comment",
   },
   fr: {
-    heroTitle: "Évaluez les réponses de LEO",
+    heroTitle: "Évaluation UX des réponses du Virtual Companion",
     heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
     seeHeuristics: "Voir la liste des heuristiques",
     backToEval: "Retour à l'évaluation",
@@ -414,6 +414,39 @@ function TopControls({ t, lang, changeLang, theme, toggleTheme, isDark }) {
 }
 
 // ── Home Page ─────────────────────────────────────────────────────────────────
+function VCLogos() {
+  const logos = [
+    { src: "/aura.png", name: "AURA" },
+    { src: "/leo.png", name: "LEO" },
+    { src: "/marie.png", name: "MARIE" },
+  ]
+  const [visible, setVisible] = useState([false, false, false])
+
+  useEffect(() => {
+    logos.forEach((_, i) => {
+      setTimeout(() => {
+        setVisible(v => { const next = [...v]; next[i] = true; return next })
+      }, i * 300)
+    })
+  }, [])
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 20 }}>
+      {logos.map((logo, i) => (
+        <div key={logo.name} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          opacity: visible[i] ? 1 : 0,
+          transform: visible[i] ? "translateY(0)" : "translateY(16px)",
+          transition: "opacity 0.5s ease, transform 0.5s ease",
+        }}>
+          <img src={logo.src} alt={logo.name} style={{ height: 64, width: 64, objectFit: "contain" }} />
+          <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", color: "var(--fg2)", textTransform: "uppercase" }}>{logo.name}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerClosed, closeDisclaimer, openDisclaimer, setPage, mode, setMode, userQuestion, setUserQuestion, leoResponse, setLeoResponse, conversation, setConversation, comment, setComment, showComment, setShowComment, images, setImages, loading, result, error, run, reset, apiKey, setApiKey }) {
   const fileRef = useRef(null)
   const addImages = (files) => setImages(prev => [...prev, ...Array.from(files).filter(f => f.type.startsWith("image/"))])
@@ -432,7 +465,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 style={{ fontSize: "clamp(2rem,4vw,1.8rem)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
+              <h1 style={{ fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
                 {t.heroTitle}
               </h1>
               <p style={{ marginTop: 10, color: "var(--fg2)", fontSize: "0.9rem", lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -441,6 +474,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
               <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6 }}>
                 {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses — evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA — en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
               </p>
+              <VCLogos />
               <button onClick={() => setPage("heuristics")} style={{ marginTop: 16, borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.2)"; e.currentTarget.style.borderColor = "rgba(59,130,246,1)" }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.12)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.7)" }}>
