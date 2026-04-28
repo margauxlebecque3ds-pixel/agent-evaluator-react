@@ -89,11 +89,14 @@ const dict = {
     aboutShort: "À propos",
     themeToggle: "Changer de thème",
     reference: "Référence · Margaux Lebecque",
-    apiKeyLabel: "Entrer votre clé API",
+    apiKeyLabel: "Clé API Mistral",
     apiKeyPlaceholder: "sk-…",
     apiKeyHint: "Optionnel — utilise la clé serveur par défaut",
     saveComment: "Enregistrer",
     editComment: "Modifier le commentaire",
+    apiKeyTooltip: "Collez votre clé API Mistral ici. ⚠️ Fonctionne uniquement avec les clés Mistral (console.mistral.ai). Si vide, la clé serveur par défaut est utilisée.",
+    modeSingleTooltip: "Vous avez une seule question et une réponse de LEO — utilisez ce mode.",
+    modeMultiTooltip: "Vous avez une conversation complète avec plusieurs échanges — copiez-collez-la entièrement ici.",
   }
 }
 
@@ -306,6 +309,35 @@ export default function App() {
 }
 
 // ── Disclaimer ────────────────────────────────────────────────────────────────
+function Tooltip({ text }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+      <button type="button"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", padding: 0, color: "var(--fg2)" }}>
+        <Info size={13} style={{ opacity: 0.6 }} />
+      </button>
+      {show && (
+        <span style={{
+          position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)",
+          background: "color-mix(in oklab, var(--surface-el) 95%, transparent)",
+          backdropFilter: "blur(16px)", border: "1px solid var(--border)",
+          borderRadius: 10, padding: "8px 12px", fontSize: "0.75rem", lineHeight: 1.5,
+          color: "var(--fg)", width: 240, zIndex: 100,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.3)", pointerEvents: "none",
+          whiteSpace: "normal",
+        }}>
+          {text}
+        </span>
+      )}
+    </span>
+  )
+}
+
 function Disclaimer({ t, closed, onClose, onOpen }) {
   if (closed) return (
     <button onClick={onOpen} style={{ width: 40, height: 40, borderRadius: "50%", background: "color-mix(in oklab, var(--primary) 15%, transparent)", color: "var(--primary)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent)", transition: "all 0.15s" }}
@@ -415,7 +447,10 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
 
         {/* API Key */}
         <div style={{ marginBottom: 24, maxWidth: 420 }}>
-          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>{t.apiKeyLabel}</label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", color: "rgba(255,255,255,0.5)" }}>{t.apiKeyLabel}</label>
+            <Tooltip text={t.apiKeyTooltip} />
+          </div>
           <input
             type="password"
             value={apiKey}
@@ -441,6 +476,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
               }}>
                 <Icon size={15} /> {label}
               </button>
+              <Tooltip text={m === "single" ? t.modeSingleTooltip : t.modeMultiTooltip} />
             ))}
           </div>
         </div>
