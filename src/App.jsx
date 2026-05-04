@@ -3,7 +3,7 @@ import {
   Info, X, Languages, ChevronDown, Check, Sun, Moon,
   MessageSquare, MessagesSquare, MessageSquarePlus, Paperclip,
   Play, Loader2, RotateCcw, Download, Sparkles, AlertTriangle,
-  ArrowUpRight, ArrowLeft, FileText
+  ArrowUpRight, ArrowLeft, FileText, Plus, Pencil, Trash2, PanelLeft
 } from "lucide-react"
 import { evaluateSingle, evaluateMulti } from "./api"
 import { exportEvaluationToExcel } from "./export"
@@ -175,6 +175,25 @@ export default function App() {
         ? await evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images })
         : await evaluateMulti({ conversation, comment: comment || undefined, images })
       setResult(r)
+      // Save to history
+      const newEntry = {
+        id: Date.now(),
+        name: null,
+        date: new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
+        mode: mode,
+        avgScore: (() => {
+          const scores = Object.values(r.evaluation || {}).map(v => v.score).filter(s => s !== null && s !== undefined)
+          return scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : null
+        })(),
+        result: r,
+      }
+      setHistory(prev => {
+        const updated = [newEntry, ...prev].slice(0, 10)
+        localStorage.setItem("eval-history", JSON.stringify(updated))
+        return updated
+      })
+      setActiveHistoryId(newEntry.id)
+      setSidebarOpen(true)
       setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
     finally { setLoading(false) }
@@ -301,6 +320,11 @@ export default function App() {
       {page === "heuristics"
         ? <HeuristicsPage {...sharedProps} setPage={setPage} />
         : <HomePage {...sharedProps} setPage={setPage} apiKey={apiKey} setApiKey={setApiKey}
+            sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
+            history={history} setHistory={setHistory}
+            activeHistoryId={activeHistoryId} setActiveHistoryId={setActiveHistoryId}
+            editingId={editingId} setEditingId={setEditingId}
+            editingName={editingName} setEditingName={setEditingName}
             mode={mode} setMode={setMode}
             userQuestion={userQuestion} setUserQuestion={setUserQuestion}
             leoResponse={leoResponse} setLeoResponse={setLeoResponse}
@@ -439,14 +463,145 @@ function VCLogos() {
           transform: visible[i] ? "translateY(0)" : "translateY(16px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}>
-          <img src={logo.src} alt={logo.name} style={{ height: 40, width: 40, objectFit: "contain" }} />
+          <img src={logo.src} alt={logo.name} style={{ height: 32, width: 32, objectFit: "contain" }} />
         </div>
       ))}
     </div>
   )
 }
 
-function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerClosed, closeDisclaimer, openDisclaimer, setPage, mode, setMode, userQuestion, setUserQuestion, leoResponse, setLeoResponse, conversation, setConversation, comment, setComment, showComment, setShowComment, images, setImages, loading, result, error, run, reset, apiKey, setApiKey }) {
+function Sidebar({ t, open, onClose, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName, onNew, onLoad, isDark }) {
+  const deleteEntry = (id) => {
+    const updated = history.filter(h => h.id !== id)
+    setHistory(updated)
+    localStorage.setItem("eval-history", JSON.stringify(updated))
+    if (activeHistoryId === id) setActiveHistoryId(null)
+  }
+
+  const saveRename = (id) => {
+    const updated = history.map(h => h.id === id ? { ...h, name: editingName || h.name } : h)
+    setHistory(updated)
+    localStorage.setItem("eval-history", JSON.stringify(updated))
+    setEditingId(null)
+    setEditingName("")
+  }
+
+  const scoreColor = (score) => {
+    if (!score) return "var(--neutral)"
+    if (score >= 4) return "var(--success)"
+    if (score >= 2.5) return "var(--warning)"
+    return "var(--danger)"
+  }
+
+  return (
+    <>
+      {/* Overlay */}
+      {open && <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.3)", backdropFilter: "blur(2px)" }} />}
+
+      {/* Sidebar */}
+      <div style={{
+        position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 40,
+        width: open ? 260 : 0, overflow: "hidden",
+        background: isDark ? "oklch(0.11 0.025 260)" : "oklch(0.97 0.008 260)",
+        borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+        transition: "width 0.25s ease",
+        display: "flex", flexDirection: "column",
+      }}>
+        <div style={{ width: 260, padding: "20px 16px 16px", display: "flex", flexDirection: "column", height: "100%" }}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg2)" }}>{t.historyTitle}</span>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex", padding: 4, borderRadius: 6 }}>
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* New evaluation button */}
+          <button onClick={onNew} style={{
+            width: "100%", borderRadius: 8, padding: "8px 12px",
+            background: "var(--primary)", color: "white", border: "none",
+            cursor: "pointer", fontSize: "0.78rem", fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 6, marginBottom: 12,
+            fontFamily: "inherit",
+          }}>
+            <Plus size={13} /> {t.newEvaluation}
+          </button>
+
+          {/* History list */}
+          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+            {history.length === 0 ? (
+              <div style={{ textAlign: "center", color: "var(--fg2)", fontSize: "0.78rem", marginTop: 32, opacity: 0.6 }}>
+                {t.noEvalYet}
+              </div>
+            ) : (
+              history.map((entry, i) => (
+                <div key={entry.id} onClick={() => { onLoad(entry); setActiveHistoryId(entry.id) }}
+                  style={{
+                    borderRadius: 8, padding: "8px 10px", cursor: "pointer",
+                    background: activeHistoryId === entry.id
+                      ? "color-mix(in oklab, var(--primary) 15%, transparent)"
+                      : "transparent",
+                    border: activeHistoryId === entry.id
+                      ? "1px solid color-mix(in oklab, var(--primary) 40%, transparent)"
+                      : "1px solid transparent",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { if (activeHistoryId !== entry.id) e.currentTarget.style.background = "color-mix(in oklab, var(--fg) 5%, transparent)" }}
+                  onMouseLeave={e => { if (activeHistoryId !== entry.id) e.currentTarget.style.background = "transparent" }}
+                >
+                  {editingId === entry.id ? (
+                    <input
+                      value={editingName}
+                      onChange={e => setEditingName(e.target.value)}
+                      onBlur={() => saveRename(entry.id)}
+                      onKeyDown={e => e.key === "Enter" && saveRename(entry.id)}
+                      autoFocus
+                      onClick={e => e.stopPropagation()}
+                      style={{ width: "100%", background: "var(--surface-el)", border: "1px solid var(--primary)", borderRadius: 4, padding: "2px 6px", color: "var(--fg)", fontSize: "0.78rem", fontFamily: "inherit", outline: "none" }}
+                    />
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {entry.name || `Test ${history.length - i}`}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                          <span style={{ fontSize: "0.65rem", color: "var(--fg2)" }}>{entry.date}</span>
+                          <span style={{ fontSize: "0.62rem", background: "color-mix(in oklab, var(--primary) 15%, transparent)", color: "var(--primary)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>
+                            {entry.mode === "single" ? t.singleBadge : t.multiBadge}
+                          </span>
+                          {entry.avgScore && (
+                            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: scoreColor(parseFloat(entry.avgScore)) }}>
+                              {entry.avgScore}/5
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 2, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => { setEditingId(entry.id); setEditingName(entry.name || `Test ${history.length - i}`) }}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", padding: 3, borderRadius: 4, display: "flex" }}
+                          title={t.renameEval}>
+                          <Pencil size={11} />
+                        </button>
+                        <button onClick={() => deleteEntry(entry.id)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 3, borderRadius: 4, display: "flex" }}
+                          title={t.deleteEval}>
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerClosed, closeDisclaimer, openDisclaimer, setPage, mode, setMode, userQuestion, setUserQuestion, leoResponse, setLeoResponse, conversation, setConversation, comment, setComment, showComment, setShowComment, images, setImages, loading, result, error, run, reset, apiKey, setApiKey, sidebarOpen, setSidebarOpen, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName }) {
   const fileRef = useRef(null)
   const addImages = (files) => setImages(prev => [...prev, ...Array.from(files).filter(f => f.type.startsWith("image/"))])
 
@@ -465,6 +620,14 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button onClick={() => setSidebarOpen(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex", alignItems: "center", padding: 4, borderRadius: 6, transition: "color 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "var(--fg)"}
+                    onMouseLeave={e => e.currentTarget.style.color = "var(--fg2)"}>
+                    <PanelLeft size={18} />
+                  </button>
+                  <div style={{ width: 1, height: 20, background: "var(--border)" }} />
+                </div>
                 <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.6rem)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
                   {t.heroTitle}
                 </h1>
