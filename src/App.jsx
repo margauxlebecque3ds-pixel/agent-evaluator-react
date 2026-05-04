@@ -324,6 +324,16 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
       `}</style>
 
+      <Sidebar
+        t={t} isDark={isDark}
+        open={sidebarOpen} onClose={() => setSidebarOpen(false)}
+        history={history} setHistory={setHistory}
+        activeHistoryId={activeHistoryId} setActiveHistoryId={setActiveHistoryId}
+        editingId={editingId} setEditingId={setEditingId}
+        editingName={editingName} setEditingName={setEditingName}
+        onNew={() => { setResult(null); setError(null); setUserQuestion(""); setLeoResponse(""); setConversation(""); setComment(""); setShowComment(false); setImages([]); setSidebarOpen(false) }}
+        onLoad={(entry) => { setResult(entry.result); setActiveHistoryId(entry.id); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
+      />
       {page === "heuristics"
         ? <HeuristicsPage {...sharedProps} setPage={setPage} />
         : <HomePage {...sharedProps} setPage={setPage} apiKey={apiKey} setApiKey={setApiKey}
