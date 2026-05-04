@@ -339,7 +339,7 @@ export default function App() {
             comment={comment} setComment={setComment}
             showComment={showComment} setShowComment={setShowComment}
             images={images} setImages={setImages}
-            loading={loading} result={result} error={error}
+            loading={loading} result={result} setResult={setResult} error={error}
             run={run} reset={reset}
           />
       }
@@ -608,7 +608,7 @@ function Sidebar({ t, open, onClose, history, setHistory, activeHistoryId, setAc
   )
 }
 
-function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerClosed, closeDisclaimer, openDisclaimer, setPage, mode, setMode, userQuestion, setUserQuestion, leoResponse, setLeoResponse, conversation, setConversation, comment, setComment, showComment, setShowComment, images, setImages, loading, result, error, run, reset, apiKey, setApiKey, sidebarOpen, setSidebarOpen, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName }) {
+function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerClosed, closeDisclaimer, openDisclaimer, setPage, mode, setMode, userQuestion, setUserQuestion, leoResponse, setLeoResponse, conversation, setConversation, comment, setComment, showComment, setShowComment, images, setImages, loading, result, setResult, error, run, reset, apiKey, setApiKey, sidebarOpen, setSidebarOpen, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName }) {
   const fileRef = useRef(null)
   const addImages = (files) => setImages(prev => [...prev, ...Array.from(files).filter(f => f.type.startsWith("image/"))])
 
@@ -622,7 +622,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         editingId={editingId} setEditingId={setEditingId}
         editingName={editingName} setEditingName={setEditingName}
         onNew={() => { reset(); setSidebarOpen(false) }}
-        onLoad={(entry) => { setResult(entry.result); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
+        onLoad={(entry) => { setResult(entry.result); setActiveHistoryId(entry.id); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
       />
       {/* Header — static, not fixed */}
       <div style={{ padding: "20px 40px 0" }}>
