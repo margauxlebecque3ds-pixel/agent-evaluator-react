@@ -12,7 +12,7 @@ import { exportEvaluationToExcel } from "./export"
 const dict = {
   en: {
     heroTitle: "UX Evaluation of Virtual Companion responses",
-    heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
+    heroSubtitle: "",
     seeHeuristics: "See the heuristics list",
     backToEval: "Back to evaluation",
     downloadPdf: "Download PDF",
@@ -60,7 +60,7 @@ const dict = {
   },
   fr: {
     heroTitle: "Évaluation UX des réponses du Virtual Companion",
-    heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
+    heroSubtitle: "",
     seeHeuristics: "Voir la liste des heuristiques",
     backToEval: "Retour à l'évaluation",
     downloadPdf: "Télécharger le PDF",
