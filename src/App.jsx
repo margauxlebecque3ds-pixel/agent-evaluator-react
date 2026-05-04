@@ -12,7 +12,7 @@ import { exportEvaluationToExcel } from "./export"
 const dict = {
   en: {
     heroTitle: "UX Evaluation of Virtual Companion responses",
-    // heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
+    heroSubtitle: "The virtual companion by Dassault Systèmes — UX Heuristics Evaluation for AI Agents",
     seeHeuristics: "See the heuristics list",
     backToEval: "Back to evaluation",
     downloadPdf: "Download PDF",
@@ -27,7 +27,7 @@ const dict = {
     fullConversation: "Full conversation",
     fullConversationPlaceholder: "Paste the entire conversation with timestamps…\n\n[10:32] User: How do I refine the mesh?\n[10:32] LEO: You can refine the mesh by…",
     optionalHelp: "Optional — add context to improve the evaluation",
-    addComment: "Add comment",
+    addComment: "Additional information",
     commentPlaceholder: "e.g. LEO highlighted the mesh zone in red",
     attach: "Attach screenshots",
     runEvaluation: "Run evaluation",
@@ -56,11 +56,11 @@ const dict = {
     modeSingleTooltip: "You have one question and one LEO response — use this mode.",
     modeMultiTooltip: "You have a full conversation with multiple exchanges — copy/paste it entirely here.",
     saveComment: "Save",
-    editComment: "Edit comment",
+    editComment: "Edit",
   },
   fr: {
     heroTitle: "Évaluation UX des réponses du Virtual Companion",
-    // heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
+    heroSubtitle: "Le compagnon virtuel de Dassault Systèmes — Évaluation des heuristiques UX pour agents IA",
     seeHeuristics: "Voir la liste des heuristiques",
     backToEval: "Retour à l'évaluation",
     downloadPdf: "Télécharger le PDF",
@@ -75,7 +75,7 @@ const dict = {
     fullConversation: "Conversation complète",
     fullConversationPlaceholder: "Collez la conversation entière avec horodatage…\n\n[10:32] Utilisateur : Comment raffiner le maillage ?\n[10:32] LEO : Vous pouvez raffiner le maillage en…",
     optionalHelp: "Optionnel — ajoutez du contexte pour améliorer l'évaluation",
-    addComment: "Ajouter un commentaire",
+    addComment: "Informations complémentaires",
     commentPlaceholder: "ex. LEO a mis en surbrillance la zone de maillage en rouge",
     attach: "Joindre des captures",
     runEvaluation: "Lancer l'évaluation",
@@ -101,7 +101,7 @@ const dict = {
     apiKeyPlaceholder: "sk-…",
     apiKeyHint: "Optionnel — utilise la clé serveur par défaut",
     saveComment: "Enregistrer",
-    editComment: "Modifier le commentaire",
+    editComment: "Modifier",
     apiKeyTooltip: "Collez votre clé API Mistral ici. ⚠️ Fonctionne uniquement avec les clés Mistral (console.mistral.ai). Si vide, la clé serveur par défaut est utilisée.",
     modeSingleTooltip: "Vous avez une seule question et une réponse de LEO — utilisez ce mode.",
     modeMultiTooltip: "Vous avez une conversation complète avec plusieurs échanges — copiez-collez-la entièrement ici.",
@@ -385,7 +385,7 @@ function TopControls({ t, lang, changeLang, theme, toggleTheme, isDark }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{ position: "relative" }} ref={ref}>
-        <button onClick={() => setOpen(v => !v)} className="glass btn-ghost" style={{ borderRadius: 999, padding: "0 14px", height: 40, fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.9)" }}>
+        <button onClick={() => setOpen(v => !v)} className="glass btn-ghost" style={{ borderRadius: 999, padding: "0 14px", height: 40, fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 8, color: "var(--fg)" }}>
           <Languages size={15} style={{ opacity: 0.7 }} />
           <span style={{ textTransform: "uppercase", letterSpacing: "0.08em", fontSize: "0.72rem", fontWeight: 600 }}>{lang}</span>
           <ChevronDown size={13} style={{ opacity: 0.5, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
@@ -406,7 +406,7 @@ function TopControls({ t, lang, changeLang, theme, toggleTheme, isDark }) {
         )}
       </div>
       <button onClick={toggleTheme} className="glass btn-ghost" title={t.themeToggle}
-        style={{ borderRadius: 999, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.9)" }}>
+        style={{ borderRadius: 999, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--fg)" }}>
         {isDark ? <Sun size={16} /> : <Moon size={16} />}
       </button>
     </div>
@@ -439,7 +439,7 @@ function VCLogos() {
           transform: visible[i] ? "translateY(0)" : "translateY(16px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}>
-          <img src={logo.src} alt={logo.name} style={{ height: 80, width: 80, objectFit: "contain" }} />
+          <img src={logo.src} alt={logo.name} style={{ height: 32, width: 32, objectFit: "contain" }} />
         </div>
       ))}
     </div>
@@ -464,17 +464,17 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
                 <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.6rem)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif", WebkitFontSmoothing: "antialiased", textRendering: "optimizeLegibility" }}>
                   {t.heroTitle}
                 </h1>
                 <VCLogos />
               </div>
-              <p style={{ marginTop: 10, color: "var(--fg2)", fontSize: "0.9rem", lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "1rem", lineHeight: 1.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {t.heroSubtitle}
               </p>
               <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6 }}>
-                {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses by evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
+                {lang === "en" ? "This tool gives you an initial UX perspective on your AI agent's responses — evaluating clarity, relevance, transparency, and more across 10 structured heuristics." : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA — en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
               </p>
               <button onClick={() => setPage("heuristics")} style={{ marginTop: 16, borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.2)"; e.currentTarget.style.borderColor = "rgba(59,130,246,1)" }}
@@ -491,7 +491,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
         {/* API Key */}
         <div style={{ marginBottom: 24, maxWidth: 420 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-            <label style={{ fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", color: "rgba(255,255,255,0.5)" }}>{t.apiKeyLabel}</label>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", color: "var(--fg2)" }}>{t.apiKeyLabel}</label>
             <Tooltip text={t.apiKeyTooltip} />
           </div>
           <input
@@ -514,7 +514,7 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
                 borderRadius: 999, padding: "8px 20px", fontSize: "0.85rem", fontWeight: 500,
                 border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, fontFamily: "inherit",
                 background: mode === m ? "var(--primary)" : "transparent",
-                color: mode === m ? "white" : "rgba(255,255,255,0.75)",
+                color: mode === m ? "white" : "var(--fg2)",
                 boxShadow: mode === m ? "0 4px 14px color-mix(in oklab, var(--primary) 40%, transparent)" : "none",
                 transition: "all 0.2s",
               }}>
@@ -653,7 +653,7 @@ function HeuristicsPage({ t, lang, changeLang, theme, toggleTheme, isDark, setPa
           <div className="glass" style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "4px 14px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--fg2)", marginBottom: 16 }}>
             <FileText size={11} style={{ color: "var(--primary)" }} /> {t.reference}
           </div>
-          <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.8rem)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{t.heuristicsPageTitle}</h1>
+          <h1 style={{ fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{t.heuristicsPageTitle}</h1>
           <p style={{ marginTop: 14, fontSize: "1rem", color: "var(--fg2)", lineHeight: 1.6 }}>{t.heuristicsPageSubtitle}</p>
         </header>
 
