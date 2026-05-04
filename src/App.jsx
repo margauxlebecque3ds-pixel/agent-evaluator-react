@@ -614,6 +614,16 @@ function HomePage({ t, lang, changeLang, theme, toggleTheme, isDark, disclaimerC
 
   return (
     <div style={{ position: "relative", minHeight: "100vh" }}>
+      <Sidebar
+        t={t} isDark={isDark}
+        open={sidebarOpen} onClose={() => setSidebarOpen(false)}
+        history={history} setHistory={setHistory}
+        activeHistoryId={activeHistoryId} setActiveHistoryId={setActiveHistoryId}
+        editingId={editingId} setEditingId={setEditingId}
+        editingName={editingName} setEditingName={setEditingName}
+        onNew={() => { reset(); setSidebarOpen(false) }}
+        onLoad={(entry) => { setResult(entry.result); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
+      />
       {/* Header — static, not fixed */}
       <div style={{ padding: "20px 40px 0" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
