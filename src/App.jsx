@@ -144,6 +144,13 @@ export default function App() {
   const [error, setError] = useState(null)
   const [disclaimerClosed, setDisclaimerClosed] = useState(false)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("eval-api-key") || "")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [history, setHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("eval-history") || "[]") } catch { return [] }
+  })
+  const [activeHistoryId, setActiveHistoryId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editingName, setEditingName] = useState("")
 
   const t = dict[lang]
   const isDark = theme === "dark"
