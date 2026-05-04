@@ -439,7 +439,7 @@ function VCLogos() {
           transform: visible[i] ? "translateY(0)" : "translateY(16px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}>
-          <img src={logo.src} alt={logo.name} style={{ height: 64, width: 64, objectFit: "contain" }} />
+          <img src={logo.src} alt={logo.name} style={{ height: 40, width: 40, objectFit: "contain" }} />
         </div>
       ))}
     </div>
