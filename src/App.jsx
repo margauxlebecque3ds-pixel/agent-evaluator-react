@@ -18,6 +18,7 @@ export default function App() {
   const [showComment, setShowComment] = useState(false)
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
+  const [runningId, setRunningId] = useState(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [disclaimerClosed, setDisclaimerClosed] = useState(false)
@@ -48,45 +49,78 @@ export default function App() {
   const reset = () => {
     setResult(null); setError(null); setUserQuestion(""); setLeoResponse("")
     setConversation(""); setComment(""); setShowComment(false); setImages([])
+    setActiveHistoryId(null)
   }
 
   const run = async () => {
     setError(null)
     if (mode === "single" && (!userQuestion.trim() || !leoResponse.trim())) { alert(t.requiredFields); return }
     if (mode === "multi" && !conversation.trim()) { alert(t.requiredFields); return }
+
+    // Créer l'entrée immédiatement avec loading: true
+    const entryId = Date.now()
+    const newEntry = {
+      id: entryId,
+      name: null,
+      date: new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
+      mode,
+      loading: true,
+      avgScore: null,
+      result: null,
+      inputs: { userQuestion, leoResponse, conversation },
+    }
+
+    setHistory(prev => {
+      const updated = [newEntry, ...prev].slice(0, 10)
+      localStorage.setItem("eval-history", JSON.stringify(updated))
+      return updated
+    })
+    setActiveHistoryId(entryId)
+    setRunningId(entryId)
+    setSidebarOpen(true)
     setLoading(true)
+    setResult(null)
+
     try {
       const r = mode === "single"
         ? await evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images })
         : await evaluateMulti({ conversation, comment: comment || undefined, images })
-      setResult(r)
-      const newEntry = {
-        id: Date.now(),
-        name: null,
-        date: new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
-        mode,
-        avgScore: (() => {
-          const scores = Object.values(r.evaluation || {}).map(v => v.score).filter(s => s !== null && s !== undefined)
-          return scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null
-        })(),
-        result: r,
-        inputs: {
-          userQuestion,
-          leoResponse,
-          conversation,
-        },
-      }
+
+      const avgScore = (() => {
+        const scores = Object.values(r.evaluation || {}).map(v => v.score).filter(s => s !== null && s !== undefined)
+        return scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null
+      })()
+
       setHistory(prev => {
-        const updated = [newEntry, ...prev].slice(0, 10)
+        const updated = prev.map(h => h.id === entryId ? { ...h, loading: false, result: r, avgScore } : h)
         localStorage.setItem("eval-history", JSON.stringify(updated))
         return updated
       })
-      setActiveHistoryId(newEntry.id)
-      setSidebarOpen(true)
-      setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
-    } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
-    finally { setLoading(false) }
+
+      // Afficher le résultat seulement si l'utilisateur est encore sur cet onglet
+      setActiveHistoryId(cur => {
+        if (cur === entryId) {
+          setResult(r)
+          setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
+        }
+        return cur
+      })
+
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+      setHistory(prev => {
+        const updated = prev.map(h => h.id === entryId ? { ...h, loading: false } : h)
+        localStorage.setItem("eval-history", JSON.stringify(updated))
+        return updated
+      })
+    } finally {
+      setLoading(false)
+      setRunningId(null)
+    }
   }
+
+  // Ce que l'utilisateur voit = l'onglet actif
+  const isViewingRunning = activeHistoryId === runningId && loading
 
   const sidebarProps = {
     t, isDark,
@@ -97,17 +131,18 @@ export default function App() {
     activeHistoryId, setActiveHistoryId,
     editingId, setEditingId,
     editingName, setEditingName,
+    runningId,
     onNew: () => { reset(); setSidebarOpen(false) },
     onLoad: (entry) => {
-      setResult(entry.result)
       setActiveHistoryId(entry.id)
-      setSidebarOpen(false)
       if (entry.inputs) {
         setMode(entry.mode || "single")
         setUserQuestion(entry.inputs.userQuestion || "")
         setLeoResponse(entry.inputs.leoResponse || "")
         setConversation(entry.inputs.conversation || "")
       }
+      setResult(entry.result || null)
+      setSidebarOpen(false)
       setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
     },
   }
@@ -136,7 +171,8 @@ export default function App() {
               comment={comment} setComment={setComment}
               showComment={showComment} setShowComment={setShowComment}
               images={images} setImages={setImages}
-              loading={loading} result={result} setResult={setResult} error={error}
+              loading={isViewingRunning}
+              result={result} setResult={setResult} error={error}
               run={run} reset={reset}
             />
         }

@@ -132,20 +132,19 @@ export default function HomePage({
           <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => e.target.files && addImages(e.target.files)} />
 
           {/* Run row */}
-          <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            {(result || error) ? (
-              <button onClick={reset} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
-                <RotateCcw size={14} /> {t.newEvaluation}
-              </button>
-            ) : <span />}
-            <button onClick={run} disabled={loading} className="btn-primary" style={{ borderRadius: 999, padding: "12px 32px", fontSize: "0.9rem" }}>
-              {loading
-                ? <><Loader2 size={16} className="spin" /> {t.evaluating}</>
-                : <><Play size={15} style={{ fill: "currentColor" }} /> {t.runEvaluation}</>}
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        {(result || error) ? (
+            <button onClick={reset} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
+            <RotateCcw size={14} /> {t.newEvaluation}
             </button>
-          </div>
+        ) : <span />}
+        <button onClick={run} disabled={loading} className="btn-primary" style={{ borderRadius: 999, padding: "12px 32px", fontSize: "0.9rem" }}>
+            {loading
+            ? <><Loader2 size={16} className="spin" /> {t.evaluating}</>
+            : <><Play size={15} style={{ fill: "currentColor" }} /> {t.runEvaluation}</>}
+        </button>
         </div>
-
+        </div>
         {/* Error */}
         {error && (
           <div className="fade-up" style={{ marginTop: 20, borderRadius: 16, padding: 16, background: "color-mix(in oklab, var(--danger) 12%, transparent)", border: "1px solid color-mix(in oklab, var(--danger) 40%, transparent)", display: "flex", gap: 12 }}>
