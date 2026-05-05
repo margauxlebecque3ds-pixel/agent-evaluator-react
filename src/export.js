@@ -1,25 +1,17 @@
-import * as XLSX from "xlsx"
+import { API_BASE } from "./api"
 
-export function exportEvaluationToExcel(result, filename = "eval-ai-results.xlsx") {
-  const rows = result.criteria.map((c, i) => ({
-    "#": i + 1,
-    "Criterion": c.criterion.replace(/_/g, " ").replace(/\b\w/g, ch => ch.toUpperCase()),
-    "Score": c.score === null ? "N/A" : `${c.score}/5`,
-    "Observed elements": c.observed || "",
-    "Justification": c.justification || "",
-    "Improvement advice": c.advice || "",
-  }))
-
-  const wb = XLSX.utils.book_new()
-  const ws = XLSX.utils.json_to_sheet(rows)
-  ws["!cols"] = [{ wch: 4 }, { wch: 36 }, { wch: 8 }, { wch: 50 }, { wch: 50 }, { wch: 50 }]
-  XLSX.utils.book_append_sheet(wb, ws, "Criteria")
-
-  if (result.global_suggestions) {
-    const ws2 = XLSX.utils.aoa_to_sheet([["Global suggestions"], [result.global_suggestions]])
-    ws2["!cols"] = [{ wch: 100 }]
-    XLSX.utils.book_append_sheet(wb, ws2, "Global suggestions")
-  }
-
-  XLSX.writeFile(wb, filename)
+export async function exportEvaluationToExcel(result, title = "Exchange 1") {
+  const res = await fetch(`${API_BASE}/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ result, title }),
+  })
+  if (!res.ok) throw new Error(`Export failed: ${res.status}`)
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `eval-${Date.now()}.xlsx`
+  a.click()
+  URL.revokeObjectURL(url)
 }

@@ -271,3 +271,85 @@ STRICT RULES: No global score. Cite exchange numbers. Respond ONLY with JSON.
             return evaluation_json
     else:
         return evaluation
+    
+
+
+def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    import io
+
+    FONT_NAME = "Aptos Narrow"
+    CRITERION_COLORS = ["B8D9F5","AADEC8","B8E3A0","E0EE9A","F7E08A","F9C48A","F4A89A","F0A0C0","D4AEE8","B0BAEE"]
+    LETTERS = ["A","B","C","D","E","F","G","H","I","J"]
+    CRITERION_LABELS = [
+        "A. Request adequacy","B. Reasoning transparency","C. Contextual relevance",
+        "D. Human controllability","E. Cognitive load reduction","F. Reliability & anticipation",
+        "G. Action segmentation","H. Bridge to interface and 3D model",
+        "I. Interoperability","J. Consistency over time",
+    ]
+
+    def fill(hex_color): return PatternFill("solid", fgColor=hex_color)
+    def thin_border(left=True, right=True, top=True, bottom=True):
+        thin = Side(border_style="thin"); none = Side(border_style=None)
+        return Border(left=thin if left else none, right=thin if right else none, top=thin if top else none, bottom=thin if bottom else none)
+    def font(size=11, bold=False): return Font(name=FONT_NAME, size=size, bold=bold)
+
+    wb = Workbook(); ws = wb.active; ws.title = "Sheet1"
+
+    ws.column_dimensions["B"].width = 45
+    for col, w in zip("CDEFGHIJKLMN", [3.3,3.6,3.7,13,3.3,13,3.7,13,3.3,3.3,7.1,8.7]):
+        ws.column_dimensions[col].width = w
+
+    ws.merge_cells("C2:N3"); ws["C2"] = title; ws["C2"].font = font(18, True)
+    ws.row_dimensions[2].height = 21; ws.row_dimensions[3].height = 21
+
+    ws.merge_cells("C4:N4"); ws["C4"] = "Grades for the 10 Criteria"; ws["C4"].font = font(18, True)
+    ws.row_dimensions[4].height = 24
+
+    ws.row_dimensions[5].height = 21
+    for i, (letter, color) in enumerate(zip(LETTERS, CRITERION_COLORS)):
+        col = get_column_letter(3 + i); cell = ws[f"{col}5"]
+        cell.value = letter; cell.fill = fill(color)
+        cell.font = font(11); cell.alignment = Alignment(horizontal="center"); cell.border = thin_border()
+    ws["M5"] = "Avg"; ws["M5"].font = font(11); ws["M5"].alignment = Alignment(horizontal="center")
+    ws["N5"] = "Sum"; ws["N5"].font = font(11); ws["N5"].alignment = Alignment(horizontal="center")
+
+    ws.row_dimensions[6].height = 21
+    criteria = result.get("criteria", [])
+    for i in range(10):
+        col = get_column_letter(3 + i); cell = ws[f"{col}6"]
+        if i < len(criteria):
+            score = criteria[i].get("score")
+            cell.value = score if score is not None else "N/A"
+        cell.font = font(11); cell.alignment = Alignment(horizontal="center")
+    ws["M6"] = "=AVERAGE(C6:L6)"; ws["M6"].font = font(11); ws["M6"].alignment = Alignment(horizontal="center")
+    ws["N6"] = "=SUM(C6:L6)"; ws["N6"].font = font(11); ws["N6"].alignment = Alignment(horizontal="center")
+
+    ws.row_dimensions[7].height = 24
+    ws["B7"] = "10 Criteria"; ws["B7"].font = font(11, True)
+    ws.merge_cells("C7:N7"); ws["C7"] = "Detailed evaluations"; ws["C7"].font = font(18, True)
+
+    for i in range(10):
+        start_row = 8 + i * 3; color = CRITERION_COLORS[i]
+        ws.merge_cells(f"B{start_row}:B{start_row+2}")
+        b = ws[f"B{start_row}"]
+        b.value = CRITERION_LABELS[i]; b.fill = fill(color); b.font = font(14)
+        b.alignment = Alignment(horizontal="left", vertical="center"); b.border = thin_border()
+
+        cdata = criteria[i] if i < len(criteria) else {}
+        for j, (label, key) in enumerate([("Observation","observed"),("Justification","justification"),("Advice","advice")]):
+            row = start_row + j; value = cdata.get(key, "") or ""
+            ws.merge_cells(f"C{row}:N{row}")
+            c = ws[f"C{row}"]
+            c.value = f"{label}: {value}" if value else label
+            c.font = font(11); c.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+            c.border = thin_border(left=True, right=False, top=False, bottom=False)
+            ws.row_dimensions[row].height = max(30, min(len(str(value)) // 3, 120)) if value else 20
+
+    ws.row_dimensions[40].height = 37.5
+    ws["B40"] = "Tips: Use ALT+H+O+I to autofit columns width"; ws["B40"].font = font(10)
+
+    buf = io.BytesIO(); wb.save(buf); buf.seek(0)
+    return buf.read()    

@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.responses import Response
+import json
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -61,3 +63,19 @@ def evaluate_multi(req: MultiRequest):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+
+class ExportRequest(BaseModel):
+    result: dict
+    title: Optional[str] = "Exchange 1"
+
+@app.post("/export")
+def export_excel(req: ExportRequest):
+    from main import generate_export_xlsx
+    data = generate_export_xlsx(req.result, req.title)
+    return Response(
+        content=data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="eval-results.xlsx"'}
+    )
