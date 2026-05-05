@@ -135,9 +135,10 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
         j === 2,            // bottom sur dernière ligne
       )
 
-      ws.getRow(row).height = value
-  ? Math.max(45, Math.min(value.length * 0.8, 300))
-  : 20
+      const charsPerLine = 90
+      const lineHeight = 15
+      const lines = value ? Math.ceil(value.length / charsPerLine) + 1 : 1
+      ws.getRow(row).height = value ? Math.max(20, lines * lineHeight) : 20
     })
   }
 
