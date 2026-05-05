@@ -70,6 +70,11 @@ export default function App() {
           return scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null
         })(),
         result: r,
+        inputs: {
+          userQuestion,
+          leoResponse,
+          conversation,
+        },
       }
       setHistory(prev => {
         const updated = [newEntry, ...prev].slice(0, 10)
@@ -93,7 +98,18 @@ export default function App() {
     editingId, setEditingId,
     editingName, setEditingName,
     onNew: () => { reset(); setSidebarOpen(false) },
-    onLoad: (entry) => { setResult(entry.result); setActiveHistoryId(entry.id); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) },
+    onLoad: (entry) => {
+      setResult(entry.result)
+      setActiveHistoryId(entry.id)
+      setSidebarOpen(false)
+      if (entry.inputs) {
+        setMode(entry.mode || "single")
+        setUserQuestion(entry.inputs.userQuestion || "")
+        setLeoResponse(entry.inputs.leoResponse || "")
+        setConversation(entry.inputs.conversation || "")
+      }
+      setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
+    },
   }
 
   return (
