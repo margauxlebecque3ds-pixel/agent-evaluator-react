@@ -86,41 +86,45 @@ export default function App() {
   const sidebarProps = {
     t, isDark,
     open: sidebarOpen,
+    onToggle: () => setSidebarOpen(v => !v),
     onClose: () => setSidebarOpen(false),
     history, setHistory,
     activeHistoryId, setActiveHistoryId,
     editingId, setEditingId,
     editingName, setEditingName,
+    onNew: () => { reset(); setSidebarOpen(false) },
+    onLoad: (entry) => { setResult(entry.result); setActiveHistoryId(entry.id); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) },
   }
 
   return (
     <>
       <style>{globalStyles}</style>
-      <Sidebar
-        {...sidebarProps}
-        onNew={() => { reset(); setSidebarOpen(false) }}
-        onLoad={(entry) => { setResult(entry.result); setActiveHistoryId(entry.id); setSidebarOpen(false); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
-      />
-      {page === "heuristics"
-        ? <HeuristicsPage t={t} lang={lang} changeLang={changeLang} theme={theme} toggleTheme={toggleTheme} isDark={isDark} setPage={setPage} />
-        : <HomePage
-            {...sidebarProps}
-            t={t} lang={lang} changeLang={changeLang} theme={theme} toggleTheme={toggleTheme} isDark={isDark}
-            disclaimerClosed={disclaimerClosed} closeDisclaimer={closeDisclaimer} openDisclaimer={openDisclaimer}
-            setPage={setPage}
-            apiKey={apiKey} setApiKey={setApiKey}
-            setSidebarOpen={setSidebarOpen}
-            mode={mode} setMode={setMode}
-            userQuestion={userQuestion} setUserQuestion={setUserQuestion}
-            leoResponse={leoResponse} setLeoResponse={setLeoResponse}
-            conversation={conversation} setConversation={setConversation}
-            comment={comment} setComment={setComment}
-            showComment={showComment} setShowComment={setShowComment}
-            images={images} setImages={setImages}
-            loading={loading} result={result} setResult={setResult} error={error}
-            run={run} reset={reset}
-          />
-      }
+      <Sidebar {...sidebarProps} />
+      <div style={{
+        marginLeft: sidebarOpen ? 280 : 40,
+        transition: "margin-left 0.25s ease",
+        minHeight: "100vh",
+      }}>
+        {page === "heuristics"
+          ? <HeuristicsPage t={t} lang={lang} changeLang={changeLang} theme={theme} toggleTheme={toggleTheme} isDark={isDark} setPage={setPage} />
+          : <HomePage
+              t={t} lang={lang} changeLang={changeLang} theme={theme} toggleTheme={toggleTheme} isDark={isDark}
+              disclaimerClosed={disclaimerClosed} closeDisclaimer={closeDisclaimer} openDisclaimer={openDisclaimer}
+              setPage={setPage}
+              apiKey={apiKey} setApiKey={setApiKey}
+              open={sidebarOpen}
+              mode={mode} setMode={setMode}
+              userQuestion={userQuestion} setUserQuestion={setUserQuestion}
+              leoResponse={leoResponse} setLeoResponse={setLeoResponse}
+              conversation={conversation} setConversation={setConversation}
+              comment={comment} setComment={setComment}
+              showComment={showComment} setShowComment={setShowComment}
+              images={images} setImages={setImages}
+              loading={loading} result={result} setResult={setResult} error={error}
+              run={run} reset={reset}
+            />
+        }
+      </div>
     </>
   )
 }

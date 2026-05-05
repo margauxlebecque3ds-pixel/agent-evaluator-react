@@ -1,11 +1,10 @@
 import { useRef } from "react"
 import {
   MessageSquare, MessagesSquare, Play, Loader2, RotateCcw,
-  Download, Sparkles, AlertTriangle, ArrowUpRight, PanelLeft
+  Download, Sparkles, AlertTriangle, ArrowUpRight
 } from "lucide-react"
 import { exportEvaluationToExcel } from "../export"
 import { scoreMeta } from "../heuristics"
-import Sidebar from "./Sidebar"
 import Disclaimer from "./Disclaimer"
 import TopControls from "./TopControls"
 import VCLogos from "./VCLogos"
@@ -27,60 +26,37 @@ export default function HomePage({
   loading, result, setResult, error,
   run, reset,
   apiKey, setApiKey,
-  open, onClose,
-  history, setHistory,
-  activeHistoryId, setActiveHistoryId,
-  editingId, setEditingId,
-  editingName, setEditingName,
-  setSidebarOpen,
 }) {
   const fileRef = useRef(null)
   const addImages = (files) => setImages(prev => [...prev, ...Array.from(files).filter(f => f.type.startsWith("image/"))])
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
-      <Sidebar
-        t={t} isDark={isDark}
-        open={open} onClose={onClose}
-        history={history} setHistory={setHistory}
-        activeHistoryId={activeHistoryId} setActiveHistoryId={setActiveHistoryId}
-        editingId={editingId} setEditingId={setEditingId}
-        editingName={editingName} setEditingName={setEditingName}
-        onNew={() => { reset(); onClose() }}
-        onLoad={(entry) => { setResult(entry.result); setActiveHistoryId(entry.id); onClose(); setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100) }}
-      />
+    <div style={{ minHeight: "100vh" }}>
 
+      {/* Header */}
       <div style={{ padding: "20px 40px 0" }}>
         <Disclaimer t={t} closed={disclaimerClosed} onClose={closeDisclaimer} onOpen={openDisclaimer} />
       </div>
 
       <main style={{ padding: "24px 40px 80px" }}>
+
         {/* Hero */}
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button onClick={() => setSidebarOpen(v => !v)}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex", alignItems: "center", padding: 4, borderRadius: 6, transition: "color 0.15s" }}
-                    onMouseEnter={e => e.currentTarget.style.color = "var(--fg)"}
-                    onMouseLeave={e => e.currentTarget.style.color = "var(--fg2)"}>
-                    <PanelLeft size={18} />
-                  </button>
-                  <div style={{ width: 1, height: 20, background: "var(--border)" }} />
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
                 <h1 style={{ fontSize: "clamp(1.2rem,2.5vw,1.6rem)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.04em" }}>
                   {t.heroTitle}
                 </h1>
                 <VCLogos />
               </div>
-              <p style={{ marginTop: 6, color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6 }}>
+              <p style={{ color: "var(--fg2)", fontSize: "0.85rem", lineHeight: 1.6, marginBottom: 16 }}>
                 {lang === "en"
                   ? "This tool gives you an initial UX perspective on your AI agent's responses — evaluating clarity, relevance, transparency, and more across 10 structured heuristics."
                   : "Cet outil vous permet d'obtenir un premier retour UX sur les réponses de votre agent IA — en évaluant la clarté, la pertinence, la transparence et bien plus, selon 10 heuristiques structurées."}
               </p>
               <button onClick={() => setPage("heuristics")}
-                style={{ marginTop: 16, borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
+                style={{ borderRadius: 999, padding: "9px 20px", fontSize: "0.82rem", fontWeight: 600, border: "1.5px solid rgba(59,130,246,0.7)", background: "rgba(59,130,246,0.12)", color: "rgba(59,130,246,1)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.2)"; e.currentTarget.style.borderColor = "rgba(59,130,246,1)" }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.12)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.7)" }}>
                 {t.seeHeuristics} <ArrowUpRight size={14} />

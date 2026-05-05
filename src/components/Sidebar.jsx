@@ -1,6 +1,6 @@
-import { X, Plus, Pencil, Trash2 } from "lucide-react"
+import { X, Plus, Pencil, Trash2, PanelLeft } from "lucide-react"
 
-export default function Sidebar({ t, open, onClose, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName, onNew, onLoad, isDark }) {
+export default function Sidebar({ t, open, onToggle, onClose, history, setHistory, activeHistoryId, setActiveHistoryId, editingId, setEditingId, editingName, setEditingName, onNew, onLoad, isDark }) {
   const deleteEntry = (id) => {
     const updated = history.filter(h => h.id !== id)
     setHistory(updated)
@@ -23,18 +23,45 @@ export default function Sidebar({ t, open, onClose, history, setHistory, activeH
     return "var(--danger)"
   }
 
+  const railBg = isDark ? "oklch(0.11 0.025 260)" : "oklch(0.97 0.008 260)"
+  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
+
   return (
-    <>
-      {open && <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.3)", backdropFilter: "blur(2px)" }} />}
+    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 40, display: "flex" }}>
+
+      {/* Rail — toujours visible */}
       <div style={{
-        position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 40,
-        width: open ? 260 : 0, overflow: "hidden",
-        background: isDark ? "oklch(0.11 0.025 260)" : "oklch(0.97 0.008 260)",
-        borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
-        transition: "width 0.25s ease",
-        display: "flex", flexDirection: "column",
+        width: 40, flexShrink: 0,
+        background: railBg,
+        borderRight: `1px solid ${borderColor}`,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        paddingTop: 20, gap: 8,
       }}>
-        <div style={{ width: 260, padding: "20px 16px 16px", display: "flex", flexDirection: "column", height: "100%" }}>
+        <button onClick={onToggle} style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: open ? "var(--primary)" : "var(--fg2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: 28, height: 28, borderRadius: 6,
+          transition: "color 0.15s, background 0.15s",
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = "color-mix(in oklab, var(--primary) 10%, transparent)"}
+          onMouseLeave={e => e.currentTarget.style.background = "none"}
+        >
+          <PanelLeft size={16} />
+        </button>
+      </div>
+
+      {/* Panel sliding */}
+      <div style={{
+        width: open ? 240 : 0,
+        overflow: "hidden",
+        transition: "width 0.25s ease",
+        background: railBg,
+        borderRight: open ? `1px solid ${borderColor}` : "none",
+      }}>
+        <div style={{ width: 240, padding: "20px 16px 16px", display: "flex", flexDirection: "column", height: "100%" }}>
+
+          {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg2)" }}>{t.historyTitle}</span>
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex", padding: 4, borderRadius: 6 }}>
@@ -42,10 +69,12 @@ export default function Sidebar({ t, open, onClose, history, setHistory, activeH
             </button>
           </div>
 
+          {/* New evaluation */}
           <button onClick={onNew} style={{ width: "100%", borderRadius: 8, padding: "8px 12px", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, marginBottom: 12, fontFamily: "inherit" }}>
             <Plus size={13} /> {t.newEvaluation}
           </button>
 
+          {/* History list */}
           <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
             {history.length === 0 ? (
               <div style={{ textAlign: "center", color: "var(--fg2)", fontSize: "0.78rem", marginTop: 32, opacity: 0.6 }}>
@@ -105,6 +134,6 @@ export default function Sidebar({ t, open, onClose, history, setHistory, activeH
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
