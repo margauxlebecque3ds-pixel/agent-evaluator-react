@@ -2,11 +2,11 @@ import { Info, X } from "lucide-react"
 
 export default function Disclaimer({ t, closed, onClose, onOpen }) {
   if (closed) return (
-    <button onClick={onOpen}
-      style={{ width: 40, height: 40, borderRadius: "50%", background: "color-mix(in oklab, var(--primary) 15%, transparent)", color: "var(--primary)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent)", transition: "all 0.15s" }}
-      title={t.aboutTitle}>
-      <Info size={16} />
-    </button>
+    <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", display: "flex", alignItems: "center", flexShrink: 0, padding: 4, borderRadius: 6, transition: "color 0.15s" }}
+  onMouseEnter={e => e.currentTarget.style.color = "var(--fg)"}
+  onMouseLeave={e => e.currentTarget.style.color = "var(--fg2)"}>
+  <X size={16} />
+</button>
   )
   return (
     <div className="fade-up" style={{ display: "flex", alignItems: "flex-start", gap: 16, borderRadius: 16, padding: "14px 20px", background: "linear-gradient(100deg, color-mix(in oklab, var(--primary) 22%, transparent), color-mix(in oklab, var(--primary) 8%, transparent) 60%, transparent)", border: "1px solid color-mix(in oklab, var(--primary) 35%, transparent)" }}>
