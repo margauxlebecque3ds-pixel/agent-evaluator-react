@@ -136,8 +136,8 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
       )
 
       ws.getRow(row).height = value
-        ? Math.max(30, Math.min(value.length / 3, 120))
-        : 20
+  ? Math.max(45, Math.min(value.length * 0.8, 300))
+  : 20
     })
   }
 
