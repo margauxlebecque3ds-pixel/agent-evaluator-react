@@ -70,17 +70,15 @@ class ExportRequest(BaseModel):
     result: dict
     title: Optional[str] = "Exchange 1"
 
+from fastapi.responses import StreamingResponse
+import io
+
 @app.post("/export")
 def export_excel(req: ExportRequest):
     from main import generate_export_xlsx
     data = generate_export_xlsx(req.result, req.title)
-    return Response(
-        content=data,
+    return StreamingResponse(
+        io.BytesIO(data),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": 'attachment; filename="eval-results.xlsx"',
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-        }
+        headers={"Content-Disposition": 'attachment; filename="eval-results.xlsx"'}
     )
