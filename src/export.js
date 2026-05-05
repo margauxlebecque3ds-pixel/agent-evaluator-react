@@ -14,22 +14,32 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
   const ws = wb.addWorksheet("Sheet1")
 
   ws.getColumn("B").width = 45
-  const cwidths = [3.3,3.6,3.7,13,3.3,13,3.7,13,3.3,3.3,7.1,8.7]
+  const cwidths = [4,4,4,4,4,4,4,4,4,4,7.1,8.7]
   "CDEFGHIJKLMN".split("").forEach((c,i) => { ws.getColumn(c).width = cwidths[i] })
 
-  const thin = { style: "thin" }
-  const border = (l,r,t,b) => ({ left: l?{style:"thin"}:undefined, right: r?{style:"thin"}:undefined, top: t?{style:"thin"}:undefined, bottom: b?{style:"thin"}:undefined })
+  const border = (l,r,t,b) => ({
+    left: l?{style:"thin"}:undefined,
+    right: r?{style:"thin"}:undefined,
+    top: t?{style:"thin"}:undefined,
+    bottom: b?{style:"thin"}:undefined
+  })
 
   // Row 2-3: title
   ws.mergeCells("C2:N3")
   const c2 = ws.getCell("C2")
-  c2.value = title; c2.font = { name:"Aptos Narrow", size:18, bold:true }
+  c2.value = title
+  c2.font = { name:"Aptos Narrow", size:18, bold:true }
+  c2.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FFFFD7C8" } }
+  c2.alignment = { horizontal:"center", vertical:"middle" }
   ws.getRow(2).height = 21; ws.getRow(3).height = 21
 
   // Row 4: section header
   ws.mergeCells("C4:N4")
   const c4 = ws.getCell("C4")
-  c4.value = "Grades for the 10 Criteria"; c4.font = { name:"Aptos Narrow", size:18, bold:true }
+  c4.value = "Grades for the 10 Criteria"
+  c4.font = { name:"Aptos Narrow", size:18, bold:true, color:{ argb:"FFFFFFFF" } }
+  c4.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF4BACC6" } }
+  c4.alignment = { horizontal:"center", vertical:"middle" }
   ws.getRow(4).height = 24
 
   // Row 5: letter headers
@@ -54,16 +64,32 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
     const cell = ws.getCell(`${col}6`)
     const score = i < criteria.length ? criteria[i].score : null
     cell.value = score !== null && score !== undefined ? score : "N/A"
-    cell.font = { name:"Aptos Narrow", size:11 }; cell.alignment = { horizontal:"center" }
+    cell.font = { name:"Aptos Narrow", size:11 }
+    cell.alignment = { horizontal:"center" }
   })
-  const avgCell = ws.getCell("M6"); avgCell.value = { formula:"AVERAGE(C6:L6)" }; avgCell.font = { name:"Aptos Narrow", size:11 }; avgCell.alignment = { horizontal:"center" }
-  const sumCell = ws.getCell("N6"); sumCell.value = { formula:"SUM(C6:L6)" }; sumCell.font = { name:"Aptos Narrow", size:11 }; sumCell.alignment = { horizontal:"center" }
+  const avgCell = ws.getCell("M6")
+  avgCell.value = { formula:"AVERAGE(C6:L6)" }
+  avgCell.font = { name:"Aptos Narrow", size:11 }
+  avgCell.alignment = { horizontal:"center" }
+  const sumCell = ws.getCell("N6")
+  sumCell.value = { formula:"SUM(C6:L6)" }
+  sumCell.font = { name:"Aptos Narrow", size:11 }
+  sumCell.alignment = { horizontal:"center" }
 
-  // Row 7: detail headers
+  // Row 7: detail headers — merge AVANT de set les styles
   ws.getRow(7).height = 24
-  ws.getCell("B7").value = "10 Criteria"; ws.getCell("B7").font = { name:"Aptos Narrow", size:11, bold:true }
+  const b7 = ws.getCell("B7")
+  b7.value = "10 Criteria"
+  b7.font = { name:"Aptos Narrow", size:11, bold:true, color:{ argb:"FFFFFFFF" } }
+  b7.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF4BACC6" } }
+  b7.alignment = { horizontal:"left", vertical:"middle" }
+
   ws.mergeCells("C7:N7")
-  ws.getCell("C7").value = "Detailed evaluations"; ws.getCell("C7").font = { name:"Aptos Narrow", size:18, bold:true }
+  const c7 = ws.getCell("C7")
+  c7.value = "Detailed evaluations"
+  c7.font = { name:"Aptos Narrow", size:18, bold:true, color:{ argb:"FFFFFFFF" } }
+  c7.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF4BACC6" } }
+  c7.alignment = { horizontal:"center", vertical:"middle" }
 
   // Rows 8-37: criteria
   for (let i = 0; i < 10; i++) {
@@ -88,8 +114,12 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
       const row = startRow + j
       ws.mergeCells(`C${row}:N${row}`)
       const cell = ws.getCell(`C${row}`)
-      cell.value = value ? `${label}: ${value}` : label
-      cell.font = { name:"Aptos Narrow", size:11 }
+      cell.value = value
+        ? { richText: [
+            { text: `${label}: `, font:{ name:"Aptos Narrow", size:11, bold:true } },
+            { text: value, font:{ name:"Aptos Narrow", size:11 } }
+          ]}
+        : label
       cell.alignment = { horizontal:"left", vertical:"top", wrapText:true }
       cell.border = border(true,false,false,false)
       ws.getRow(row).height = value ? Math.max(30, Math.min(value.length / 3, 120)) : 20
