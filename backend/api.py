@@ -77,5 +77,10 @@ def export_excel(req: ExportRequest):
     return Response(
         content=data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="eval-results.xlsx"'}
+        headers={
+            "Content-Disposition": 'attachment; filename="eval-results.xlsx"',
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
     )
