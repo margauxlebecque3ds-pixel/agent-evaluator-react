@@ -184,7 +184,7 @@ export default function HomePage({
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {c.observed && <ResultSection label={t.observed} body={c.observed} />}
                       {c.justification && <ResultSection label={t.justification} body={c.justification} />}
-                      {c.advice && c.score !== null && c.score < 5 && <ResultSection label={t.advice} body={c.advice} highlight />}
+                      {c.advice && <ResultSection label={t.advice} body={c.advice} highlight />}
                     </div>
                   </div>
                 )
