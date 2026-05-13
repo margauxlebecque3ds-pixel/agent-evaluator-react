@@ -57,7 +57,7 @@ def analyze_interface_image(image_b64):
                         },
                         {
                             "type": "text",
-                            "text": "You are a UX researcher analyzing a screenshot from a CAD/simulation software interface (Dassault Systemes SIMULIA / 3DEXPERIENCE). Analyze this screenshot and describe: 1. What is visible in the 3D view (objects, selections, highlights, mesh, annotations)? 2. Is there any visual feedback from the AI agent (LEO/AURA/MARIE) on the 3D model (highlighted zones, color changes, annotations, glyphs)? 3. Does the interface state seem to reflect an action performed by the AI agent? 4. What is the overall state of the interface (which panels are open, what is selected)? Be specific and concise. This analysis will be used to evaluate the AI agent ability to interact with the 3D interface."
+                            "text": "You are a UX researcher analyzing a screenshot from a CAD/simulation software interface (Dassault Systemes SIMULIA / 3DEXPERIENCE). Analyze this screenshot and describe: 1. What is visible in the 3D view (objects, selections, highlights, mesh, annotations)? 2. Is there any visual feedback from the AI agent (LEO/AURA/MARIE) on the 3D model (highlighted zones, color changes, annotations, glyphs)? 3. Does the interface state seem to reflect an action performed by the AI agent? 4. What is the overall state of the interface (which panels are open, what is selected)? Be specific and concise."
                         }
                     ]
                 }
@@ -100,16 +100,26 @@ WHAT MAKES A RESPONSE POOR IN THIS CONTEXT:
 ADVICE_FORMAT_INSTRUCTION = """
 CRITICAL — improvement_advice FORMAT:
 You MUST format improvement_advice as a structured list of priorities. Each item MUST follow this exact format:
-[HIGH] Short title — "exact quote from agent response" → What should have been said/done instead.
-[MEDIUM] Short title — "exact quote or description" → Improvement suggestion.
+[HIGH] Short title — "exact short quote from agent response" → What should have been said/done instead.
+[MEDIUM] Short title — "exact short quote or description of absence" → Improvement suggestion.
 [LOW] Short title — Description → Nice-to-have improvement.
 
 Rules:
 - Maximum 3 bullets per criterion
-- Each bullet MUST include a short direct quote from the agent response (in quotes) OR reference a specific absence
+- Each bullet MUST include a SHORT direct quote from the agent response (in quotes, max 8 words) OR reference a specific absence
 - Keep each bullet under 2 lines
 - Prioritize: HIGH = blocks user task, MEDIUM = degrades experience, LOW = polish
-- If score is 4 or 5, still provide 1-2 LOW items for continuous improvement
+- If score is 4 or 5, still provide 1 LOW item for continuous improvement
+- The quote part is what the agent said, the arrow part is the better alternative
+"""
+
+JUSTIFICATION_INSTRUCTION = """
+CRITICAL — justification FORMAT:
+Write 2-3 sentences maximum. Explain WHY this score was given in plain analytical language.
+- Reference the SIMULIA/industrial context (e.g. "An engineer working in SIMULIA would expect...")
+- Mention user level detection if relevant (e.g. "The agent treats the user as a beginner without checking their level")
+- NO citations in justification — save quotes for improvement_advice
+- Be direct and specific, not generic
 """
 
 def evaluate_response(prompt, response_text, language="en", mode="single", conversation_raw="", image_b64=None, user_comment=None):
@@ -121,12 +131,12 @@ def evaluate_response(prompt, response_text, language="en", mode="single", conve
     if mode == "single":
         comment_text = ""
         if user_comment:
-            comment_text = "\n\nUSER CONTEXT NOTE (provided by the evaluator about what the agent did on the interface): " + str(user_comment)
+            comment_text = "\n\nUSER CONTEXT NOTE: " + str(user_comment)
 
         image_analysis_text = ""
         if image_b64:
             image_analysis = analyze_interface_image(image_b64)
-            image_analysis_text = "\n\nINTERFACE SCREENSHOT ANALYSIS (use this to evaluate Criterion 8):\n" + image_analysis + "\n\nBased on this screenshot, Criterion 8 IS NOW APPLICABLE."
+            image_analysis_text = "\n\nINTERFACE SCREENSHOT ANALYSIS (use for Criterion 8):\n" + image_analysis + "\n\nCriterion 8 IS NOW APPLICABLE."
 
         evaluation_prompt = f"""
 {SIMULIA_CONTEXT}
@@ -135,6 +145,8 @@ LANGUAGE INSTRUCTION: {lang_instruction}
 
 {ADVICE_FORMAT_INSTRUCTION}
 
+{JUSTIFICATION_INSTRUCTION}
+
 You are evaluating a SINGLE EXCHANGE between a user and a Virtual Companion (LEO/AURA/MARIE).
 
 HEURISTIC EVALUATION FRAMEWORK
@@ -142,84 +154,84 @@ HEURISTIC EVALUATION FRAMEWORK
 
 CRITERION 1 - Request Adequacy
 Did the agent understand the request and respond in the right format?
-0: Completely misses the request or responds to a different question.
-1: Wrong format or heavily partial — key parts of the request ignored.
+0: Completely misses the request.
+1: Wrong format or heavily partial — key parts ignored.
 2: Right topic but wrong format or missing significant parts.
-3: Main request covered with correct format, minor gaps or slight off-topic elements.
+3: Main request covered with correct format, minor gaps.
 4: Well-structured, full coverage, immediately readable.
-5: Perfect — every part of the request answered in the ideal format, nothing missing.
+5: Perfect — every part answered in ideal format, nothing missing.
 
 CRITERION 2 - Transparency of Reasoning ("Why")
 Does the agent show WHY it recommends what it recommends?
 0: Pure black box — conclusion with zero explanation.
-1: Vague generic phrase ("this is a good option") — no actual reasoning.
-2: Some reasoning but key assumptions hidden — user cannot verify.
+1: Vague generic phrase — no actual reasoning.
+2: Some reasoning but key assumptions hidden.
 3: Main reasoning visible, some gaps — partially traceable.
-4: Clear reasoning chain, minor gaps — mostly traceable.
-5: Full step-by-step reasoning, sources/assumptions cited, user invited to verify or challenge.
+4: Clear reasoning chain, minor gaps.
+5: Full reasoning, sources/assumptions cited, user invited to verify.
 
 CRITERION 3 - Contextual Relevance ("Where/Who")
 Does the agent adapt to the user's role, expertise level, and workflow step?
-0: Completely generic — could be copy-pasted from Wikipedia, no industrial context.
-1: Minimal adaptation — mentions the domain but ignores user level or workflow step.
-2: Partial adaptation — right domain but wrong level (too basic for expert, too complex for junior).
-3: Reasonable adaptation — adapted to context, minor vocabulary or level mismatches.
-4: Well-adapted — detects user level, adapts vocabulary, stays in workflow context.
-5: Perfect — detects level from phrasing, adapts response depth, offers to adjust ("Want more detail or a summary?"), references specific workflow step.
+0: Completely generic — Wikipedia-level, no industrial context.
+1: Mentions domain but ignores user level or workflow step.
+2: Right domain but wrong level (too basic for expert, too complex for junior).
+3: Reasonable adaptation, minor vocabulary or level mismatches.
+4: Detects user level, adapts vocabulary, stays in workflow context.
+5: Detects level from phrasing, adapts depth, offers to adjust, references specific workflow step.
 
 CRITERION 4 - Human Controllability
-Does the agent preserve user agency and control?
-0: Performs or implies irreversible actions with no warning or confirmation request.
-1: No mechanism for user to override, modify or cancel.
-2: Vague implication that user could modify ("you can change this").
-3: Acknowledges user control in principle, mentions it once.
-4: Actively invites validation or modification before proceeding.
-5: Full controllability — every suggestion framed as optional, explains how to modify/cancel, no action without confirmation.
+Does the agent preserve user agency?
+0: Irreversible actions implied with no warning.
+1: No mechanism to override or cancel.
+2: Vague implication that user could modify.
+3: Acknowledges user control in principle.
+4: Actively invites validation before proceeding.
+5: Every suggestion framed as optional, explains how to modify/cancel.
 
 CRITERION 5 - Cognitive Load Reduction
-Does the agent make the task easier, not harder?
-0: Overwhelming wall of text OR completely empty/useless response.
-1: Right content but chaotic structure — user must work to extract information.
-2: Understandable but wrong size — too long or too short for the task.
-3: Reasonable but could be tighter — some redundancy or missing summary.
-4: Well-calibrated length and structure — easy to scan.
-5: Optimal — perfect length, clear formatting, summary offered for long answers, key info highlighted.
+Does the agent make the task easier?
+0: Overwhelming wall of text OR completely empty.
+1: Right content but chaotic structure.
+2: Understandable but wrong size for the task.
+3: Reasonable but could be tighter.
+4: Well-calibrated length and structure.
+5: Perfect length, clear formatting, summary offered when needed.
 
 CRITERION 6 - Reliability & Anticipation ("Guardrails")
 Does the agent handle uncertainty and prevent errors?
-0: Confidently answers ambiguous questions AND/OR suggests actions that could cause errors.
-1: Guesses without flagging uncertainty OR blocks without explanation.
-2: Generic disclaimer only ("I might be wrong") — no targeted uncertainty management.
-3: Identifies ambiguity or risk, asks one clarifying question OR proposes one alternative.
+0: Confidently answers ambiguous questions, no error prevention.
+1: Guesses without flagging uncertainty.
+2: Generic disclaimer only — no targeted uncertainty management.
+3: Identifies ambiguity, asks one clarifying question.
 4: Identifies + asks + proposes alternative + mentions downstream risk.
-5: Flags all uncertainty with confidence levels, asks targeted questions, proposes multiple alternatives, anticipates downstream effects.
+5: Flags all uncertainty, targeted questions, multiple alternatives, anticipates effects.
 
 CRITERION 7 - Task Segmentation ("How")
-Does the agent break complex tasks into clear actionable steps?
+Does the agent break complex tasks into clear steps?
 0: No decomposition — dumps all information as one block.
-1: Lists items but unordered or incomplete — no logical flow.
+1: Lists items but unordered or incomplete.
 2: Partial sequence — steps present but dependencies missing.
-3: Logical sequence with some gaps — mostly followable.
-4: Clear ordered steps, mostly complete, dependencies mentioned.
-5: Complete sequence — prerequisites checked, dependencies explicit, each step actionable.
+3: Logical sequence with some gaps.
+4: Clear ordered steps, mostly complete.
+5: Complete sequence — prerequisites checked, dependencies explicit.
 
 CRITERION 8 - Interface & 3D Model Relationship
 NOT APPLICABLE if no 3D model interaction and no screenshot provided.
-0: No 3D awareness — responds as if in a text chatbot with no software context.
-1: Vague 3D reference — mentions the model but no actual interaction.
-2: Acknowledges the 3D object by name but proposes no interface action.
-3: References specific objects in text, proposes one interface action.
-4: Partial 3D interaction — highlights or selects but incomplete sync.
-5: Full sync — highlights relevant zones, proposes annotations, interface and dialogue perfectly aligned.
+0: No 3D awareness.
+1: Vague 3D reference.
+2: Acknowledges 3D object but no interface action.
+3: References specific objects, proposes one interface action.
+4: Partial 3D interaction.
+5: Full sync — highlights, annotations, interface and dialogue aligned.
 
 CRITERION 9 - Interoperability (Data Access)
 NOT APPLICABLE if no external data needed.
-0: Only uses information from the current message — no project data access.
-1: Alludes to external data but fabricates or hallucinates values.
-2: References one data source but vaguely ("your project data").
+0: Only uses current message data.
+1: Alludes to external data but fabricates values.
+2: References one source vaguely.
 3: References one identified source with specific values.
-4: Cross-references multiple sources (CATIA model + material library + ENOVIA).
-5: Full integration — all relevant sources cited, values cross-checked, discrepancies flagged.
+4: Cross-references multiple sources.
+5: Full integration — all sources cited, values cross-checked.
 
 CRITERION 10 - Consistency Over Time ("Memory")
 NOT APPLICABLE for a single exchange.
@@ -232,20 +244,20 @@ AGENT RESPONSE: {response_text}
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {{
   "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "transparency_of_reasoning": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "contextual_relevance": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "human_controllability": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "cognitive_load_reduction": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "reliability_and_anticipation": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "task_segmentation": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "observed_elements": "N/A", "justification": "Not applicable: no screenshot or 3D context provided.", "improvement_advice": "N/A"}},
-    "interoperability": {{"score": null, "applicable": false, "observed_elements": "N/A", "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}},
-    "consistency_over_time": {{"score": null, "applicable": false, "observed_elements": "N/A", "justification": "Not applicable: single exchange.", "improvement_advice": "N/A"}}
+    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences explaining the score in SIMULIA context. No quotes here.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → better alternative\\n[MEDIUM] Title — \\"short quote\\" → improvement\\n[LOW] Title — description → nice-to-have"}},
+    "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "cognitive_load_reduction": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "reliability_and_anticipation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "task_segmentation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "justification": "Not applicable: no screenshot or 3D context provided.", "improvement_advice": "N/A"}},
+    "interoperability": {{"score": null, "applicable": false, "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}},
+    "consistency_over_time": {{"score": null, "applicable": false, "justification": "Not applicable: single exchange.", "improvement_advice": "N/A"}}
   }},
   "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }}
-STRICT RULES: observed_elements must cite concrete quotes from the response. justification must reference the SIMULIA/industrial context. improvement_advice MUST follow the [HIGH]/[MEDIUM]/[LOW] bullet format. Respond ONLY with JSON.
+STRICT RULES: justification = 2-3 sentences, analytical, SIMULIA context, NO quotes. improvement_advice MUST follow [HIGH]/[MEDIUM]/[LOW] format with short quotes and arrows. Respond ONLY with JSON.
 """
 
     else:
@@ -263,13 +275,14 @@ LANGUAGE INSTRUCTION: {lang_instruction}
 
 {ADVICE_FORMAT_INSTRUCTION}
 
-You are evaluating a FULL CONVERSATION between a user and a Virtual Companion (LEO/AURA/MARIE) inside Dassault Systèmes 3DEXPERIENCE. The conversation has {n_exchanges} exchanges.
+{JUSTIFICATION_INSTRUCTION}
+
+You are evaluating a FULL CONVERSATION between a user and a Virtual Companion (LEO/AURA/MARIE). The conversation has {n_exchanges} exchanges.
 
 For each criterion:
 - Give a GLOBAL score (0-5) reflecting overall quality across ALL exchanges
-- In observed_elements: cite SPECIFIC exchanges by number with short quotes
-- In justification: explain the score with references to specific exchanges AND the industrial context
-- In improvement_advice: follow the [HIGH]/[MEDIUM]/[LOW] format, cite which exchange needs improvement
+- justification: 2-3 sentences analytical, reference specific exchange numbers, SIMULIA context, NO quotes
+- improvement_advice: [HIGH]/[MEDIUM]/[LOW] bullets with short quotes and arrows, cite exchange numbers
 
 CONVERSATION TO EVALUATE:
 {conversation_formatted}
@@ -278,95 +291,53 @@ HEURISTIC EVALUATION FRAMEWORK
 ================================
 
 CRITERION 1 - Request Adequacy
-0: Misses requests consistently across exchanges.
-1: Wrong format or heavily partial in most exchanges.
-2: Right topic but wrong format or significant gaps across exchanges.
-3: Main requests covered, some gaps or format issues in minority of exchanges.
-4: Well-structured full coverage across exchanges, minor issues.
-5: Every request in every exchange perfectly addressed.
+0: Misses requests consistently. 1: Wrong format in most exchanges. 2: Right topic, significant gaps. 3: Main requests covered, minor gaps. 4: Well-structured throughout. 5: Every request perfectly addressed.
 
 CRITERION 2 - Transparency of Reasoning
-0: No explanation in any exchange — pure black box throughout.
-1: Vague generic explanations only ("this is recommended") across exchanges.
-2: Partial reasoning in some exchanges, black box in others.
-3: Adequate reasoning in most exchanges, some gaps.
-4: Clear structured reasoning throughout, minor gaps.
-5: Full transparency across all exchanges — sources cited, reasoning traceable.
+0: Black box throughout. 1: Vague generic explanations. 2: Partial reasoning in some exchanges. 3: Adequate reasoning, some gaps. 4: Clear reasoning throughout. 5: Full transparency, sources cited.
 
 CRITERION 3 - Contextual Relevance
-0: Completely generic throughout — no industrial or user context.
-1: Minimal adaptation — domain mentioned but user level ignored.
-2: Partial adaptation — right domain, wrong level in most exchanges.
-3: Reasonable adaptation overall, minor mismatches.
-4: Well-adapted — tracks user level evolution across exchanges.
-5: Perfectly tailored — detects level from phrasing, adapts across conversation, offers level adjustment.
+0: Completely generic throughout. 1: Minimal adaptation. 2: Right domain, wrong level. 3: Reasonable adaptation overall. 4: Tracks user level across exchanges. 5: Perfect adaptation, offers level adjustment.
 
 CRITERION 4 - Human Controllability
-0: Irreversible actions suggested/implied with no warning throughout.
-1: No override mechanisms in any exchange.
-2: Vague implication of control in some exchanges.
-3: Acknowledges control in principle across exchanges.
-4: Actively invites validation in most exchanges.
-5: Full controllability throughout — every suggestion framed as optional.
+0: Irreversible actions throughout. 1: No override mechanisms. 2: Vague implication of control. 3: Acknowledges control in principle. 4: Actively invites validation. 5: Full controllability throughout.
 
 CRITERION 5 - Cognitive Load Reduction
-0: Overwhelming or empty responses throughout.
-1: Poor structure across most exchanges.
-2: Wrong size (too long/short) in most responses.
-3: Reasonable but could be tighter overall.
-4: Well-calibrated throughout.
-5: Optimal across all exchanges — perfect length, clear formatting.
+0: Overwhelming or empty throughout. 1: Poor structure overall. 2: Wrong size in most responses. 3: Reasonable but could be tighter. 4: Well-calibrated throughout. 5: Optimal across all exchanges.
 
 CRITERION 6 - Reliability & Anticipation
-0: Confident on ambiguous requests throughout, no error prevention.
-1: Guesses without flagging consistently.
-2: Generic disclaimers only across exchanges.
-3: Identifies some ambiguities and asks clarification in some exchanges.
-4: Good uncertainty management throughout.
-5: Exemplary — flags all uncertainty, targeted questions, anticipates downstream effects throughout.
+0: Confident on ambiguous requests throughout. 1: Guesses without flagging. 2: Generic disclaimers only. 3: Identifies some ambiguities. 4: Good uncertainty management. 5: Exemplary throughout.
 
 CRITERION 7 - Task Segmentation
-0: No decomposition in any exchange.
-1: Unordered or incomplete steps across exchanges.
-2: Partial sequences, missing dependencies throughout.
-3: Logical sequences in most exchanges, some gaps.
-4: Clear ordered sequences throughout, mostly complete.
-5: Complete sequences with explicit dependencies across all exchanges.
+0: No decomposition throughout. 1: Unordered steps. 2: Partial sequences. 3: Logical sequences, some gaps. 4: Clear ordered sequences. 5: Complete sequences with dependencies.
 
 CRITERION 8 - Interface & 3D Model Relationship
-NOT APPLICABLE if no 3D model interaction in the conversation.
-(Same rubric as single mode but evaluated across all exchanges)
+NOT APPLICABLE if no 3D interaction in conversation.
 
 CRITERION 9 - Interoperability
-NOT APPLICABLE if no external data needed in the conversation.
-(Same rubric as single mode but evaluated across all exchanges)
+NOT APPLICABLE if no external data needed.
 
 CRITERION 10 - Consistency Over Time ("Memory") — KEY CRITERION
-APPLICABLE since this is a multi-exchange conversation.
-0: No memory — each exchange treated as a completely fresh start.
-1: Vague inconsistent references to earlier content.
-2: Recalls some information but inconsistently — misses key context.
-3: Reasonable session memory — references earlier exchanges, misses some contradictions.
-4: Good memory — references earlier decisions, flags most inconsistencies.
-5: Perfect memory — proactively applies earlier context, flags contradictions, builds on previous answers.
+APPLICABLE for multi-exchange conversations.
+0: No memory, fresh start each exchange. 1: Vague inconsistent references. 2: Recalls some info inconsistently. 3: Reasonable memory, misses contradictions. 4: Good memory, references earlier decisions. 5: Perfect memory, proactively applies context.
 
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {{
   "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "observed_elements": "Exchange 1: '...quote...'; Exchange 2: '...quote...'", "justification": "...", "improvement_advice": "..."}},
-    "transparency_of_reasoning": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "contextual_relevance": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "human_controllability": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "cognitive_load_reduction": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "reliability_and_anticipation": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "task_segmentation": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}},
-    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "observed_elements": "N/A", "justification": "Not applicable: no 3D interaction in conversation.", "improvement_advice": "N/A"}},
-    "interoperability": {{"score": null, "applicable": false, "observed_elements": "N/A", "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}},
-    "consistency_over_time": {{"score": 0, "applicable": true, "observed_elements": "...", "justification": "...", "improvement_advice": "..."}}
+    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, reference exchange numbers, SIMULIA context, no quotes.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → better alternative (Exchange N)\\n[MEDIUM] Title — description → improvement\\n[LOW] Title — description → nice-to-have"}},
+    "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "cognitive_load_reduction": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "reliability_and_anticipation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "task_segmentation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
+    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "justification": "Not applicable: no 3D interaction.", "improvement_advice": "N/A"}},
+    "interoperability": {{"score": null, "applicable": false, "justification": "Not applicable: no external data.", "improvement_advice": "N/A"}},
+    "consistency_over_time": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}}
   }},
   "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }}
-STRICT RULES: Cite exchange numbers and short quotes. justification must reference the industrial/SIMULIA context. improvement_advice MUST follow [HIGH]/[MEDIUM]/[LOW] format. Respond ONLY with JSON.
+STRICT RULES: justification = 2-3 sentences max, analytical, cite exchange numbers, no quotes. improvement_advice MUST follow [HIGH]/[MEDIUM]/[LOW] format. Respond ONLY with JSON.
 """
 
     evaluation = client.chat.completions.create(
@@ -422,13 +393,17 @@ def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
     wb = Workbook(); ws = wb.active; ws.title = "Sheet1"
 
     ws.column_dimensions["B"].width = 45
-    for col, w in zip("CDEFGHIJKLMN", [3.3,3.6,3.7,13,3.3,13,3.7,13,3.3,3.3,7.1,8.7]):
+    for col, w in zip("CDEFGHIJKLMN", [4,4,4,4,4,4,4,4,4,4,7.1,8.7]):
         ws.column_dimensions[col].width = w
 
     ws.merge_cells("C2:N3"); ws["C2"] = title; ws["C2"].font = font(18, True)
+    ws["C2"].fill = fill("FFD7C8"); ws["C2"].alignment = Alignment(horizontal="center", vertical="middle")
     ws.row_dimensions[2].height = 21; ws.row_dimensions[3].height = 21
 
-    ws.merge_cells("C4:N4"); ws["C4"] = "Grades for the 10 Criteria"; ws["C4"].font = font(18, True)
+    ws.merge_cells("C4:N4")
+    ws["C4"] = "Grades for the 10 Criteria"
+    ws["C4"].font = Font(name=FONT_NAME, size=18, bold=True, color="FFFFFFFF")
+    ws["C4"].fill = fill("4BACC6"); ws["C4"].alignment = Alignment(horizontal="center", vertical="middle")
     ws.row_dimensions[4].height = 24
 
     ws.row_dimensions[5].height = 21
@@ -451,24 +426,29 @@ def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
     ws["N6"] = "=SUM(C6:L6)"; ws["N6"].font = font(11); ws["N6"].alignment = Alignment(horizontal="center")
 
     ws.row_dimensions[7].height = 24
-    ws["B7"] = "10 Criteria"; ws["B7"].font = font(11, True)
-    ws.merge_cells("C7:N7"); ws["C7"] = "Detailed evaluations"; ws["C7"].font = font(18, True)
+    ws["B7"] = "10 Criteria"
+    ws["B7"].font = Font(name=FONT_NAME, size=11, bold=True, color="FFFFFFFF")
+    ws["B7"].fill = fill("4BACC6"); ws["B7"].alignment = Alignment(horizontal="left", vertical="middle")
+    ws.merge_cells("C7:N7")
+    ws["C7"] = "Detailed evaluations"
+    ws["C7"].font = Font(name=FONT_NAME, size=18, bold=True, color="FFFFFFFF")
+    ws["C7"].fill = fill("4BACC6"); ws["C7"].alignment = Alignment(horizontal="center", vertical="middle")
 
     for i in range(10):
-        start_row = 8 + i * 3; color = CRITERION_COLORS[i]
-        ws.merge_cells(f"B{start_row}:B{start_row+2}")
+        start_row = 8 + i * 2; color = CRITERION_COLORS[i]
+        ws.merge_cells(f"B{start_row}:B{start_row+1}")
         b = ws[f"B{start_row}"]
         b.value = CRITERION_LABELS[i]; b.fill = fill(color); b.font = font(14)
         b.alignment = Alignment(horizontal="left", vertical="center"); b.border = thin_border()
 
         cdata = criteria[i] if i < len(criteria) else {}
-        for j, (label, key) in enumerate([("Observation","observed"),("Justification","justification"),("Advice","advice")]):
+        for j, (label, key) in enumerate([("Why this score", "justification"), ("Improvement advice", "advice")]):
             row = start_row + j; value = cdata.get(key, "") or ""
             ws.merge_cells(f"C{row}:N{row}")
             c = ws[f"C{row}"]
             c.value = f"{label}: {value}" if value else label
             c.font = font(11); c.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
-            c.border = thin_border(left=True, right=False, top=j==0, bottom=j==2)
+            c.border = thin_border(left=True, right=False, top=j==0, bottom=j==1)
             charsPerLine = 90
             lines = max(1, len(str(value)) // charsPerLine + 1) if value else 1
             ws.row_dimensions[row].height = max(20, lines * 15)
