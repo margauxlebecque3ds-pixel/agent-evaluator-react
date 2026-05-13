@@ -83,7 +83,7 @@ TYPICAL USER PROFILES:
 - IMPORTANT: A good companion DETECTS the user's level from how they phrase their question and ADAPTS accordingly. It also offers to adjust: "Would you like a more detailed explanation or a summary?"
 
 WHAT MAKES A COMPANION RESPONSE EXCELLENT IN THIS CONTEXT:
-- References specific simulation parameters, material properties, or workflow steps
+- References specific simulation parameters, material properties, or workflow steps from the actual project
 - Proposes to RUN a simulation or analysis rather than just describing what could be done
 - Cites data from the project (CATIA model, ENOVIA database, material library)
 - Adapts vocabulary to detected user level
@@ -91,35 +91,41 @@ WHAT MAKES A COMPANION RESPONSE EXCELLENT IN THIS CONTEXT:
 - Anticipates downstream effects (e.g. "changing this parameter will affect your mesh quality")
 
 WHAT MAKES A RESPONSE POOR IN THIS CONTEXT:
-- Generic Wikipedia-level answers (explaining that carbon fiber is lightweight to an engineer)
-- No connection to the actual simulation software or project data
-- Treating every user as a complete beginner
-- Not proposing any action the agent could perform in the software
+- Generic knowledge-base answers with no connection to the actual project or software
+- No attempt to detect or adapt to the user's expertise level
+- Treating every user as a complete beginner without checking
+- Not proposing any concrete action the agent could perform inside the software
 """
 
 ADVICE_FORMAT_INSTRUCTION = """
 CRITICAL — improvement_advice FORMAT:
-You MUST format improvement_advice as a structured list of priorities. Each item MUST follow this exact format:
-[HIGH] Short title — "exact short quote from agent response" → What should have been said/done instead.
-[MEDIUM] Short title — "exact short quote or description of absence" → Improvement suggestion.
-[LOW] Short title — Description → Nice-to-have improvement.
+You MUST format improvement_advice as a structured list of UX priorities. Each item MUST follow this exact format:
 
-Rules:
+[HIGH] Short title — "exact short quote from agent response (max 8 words)" → UX problem identified: explain what interaction pattern or behaviour is missing from a UX perspective.
+[MEDIUM] Short title — "exact short quote or description of absence" → UX gap explained: what should the agent have done differently in terms of interaction design.
+[LOW] Short title — "quote or description of absence" → Minor UX polish: what small improvement would enhance the experience.
+
+STRICT RULES:
 - Maximum 3 bullets per criterion
-- Each bullet MUST include a SHORT direct quote from the agent response (in quotes, max 8 words) OR reference a specific absence
+- Each bullet MUST include a SHORT direct quote from the agent response (max 8 words) OR clearly state what is absent
+- The arrow → explains the UX PROBLEM ONLY — describe what interaction pattern or UX behaviour is missing
+- ABSOLUTELY NO technical content after the arrow — no material names, no numerical values, no software-specific references, no simulation parameters
+- Stay 100% in UX territory: user level detection, response structure, information architecture, interaction patterns, controllability, transparency
+- Good examples: "agent should detect user expertise before responding" / "response lacks a proposed next action" / "no confirmation step before proceeding"
+- Bad examples: "agent should cite T700 carbon fiber" / "agent should reference CATIA material library" / "agent should use E=135 GPa"
 - Keep each bullet under 2 lines
-- Prioritize: HIGH = blocks user task, MEDIUM = degrades experience, LOW = polish
+- Prioritize: HIGH = blocks or significantly degrades user task, MEDIUM = degrades experience, LOW = polish
 - If score is 4 or 5, still provide 1 LOW item for continuous improvement
-- The quote part is what the agent said, the arrow part is the better alternative
 """
 
 JUSTIFICATION_INSTRUCTION = """
 CRITICAL — justification FORMAT:
 Write 2-3 sentences maximum. Explain WHY this score was given in plain analytical language.
 - Reference the SIMULIA/industrial context (e.g. "An engineer working in SIMULIA would expect...")
-- Mention user level detection if relevant (e.g. "The agent treats the user as a beginner without checking their level")
-- NO citations in justification — save quotes for improvement_advice
+- Mention user level detection if relevant
+- NO citations or quotes in justification — save quotes for improvement_advice
 - Be direct and specific, not generic
+- NO technical data fabrication — describe UX problems, not engineering solutions
 """
 
 def evaluate_response(prompt, response_text, language="en", mode="single", conversation_raw="", image_b64=None, user_comment=None):
@@ -172,7 +178,7 @@ Does the agent show WHY it recommends what it recommends?
 
 CRITERION 3 - Contextual Relevance ("Where/Who")
 Does the agent adapt to the user's role, expertise level, and workflow step?
-0: Completely generic — Wikipedia-level, no industrial context.
+0: Completely generic — no industrial context whatsoever.
 1: Mentions domain but ignores user level or workflow step.
 2: Right domain but wrong level (too basic for expert, too complex for junior).
 3: Reasonable adaptation, minor vocabulary or level mismatches.
@@ -244,7 +250,7 @@ AGENT RESPONSE: {response_text}
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {{
   "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences explaining the score in SIMULIA context. No quotes here.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → better alternative\\n[MEDIUM] Title — \\"short quote\\" → improvement\\n[LOW] Title — description → nice-to-have"}},
+    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, analytical, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem: what is missing from an interaction design perspective.\\n[MEDIUM] Title — \\"short quote\\" → UX gap: what interaction pattern should have been used.\\n[LOW] Title — \\"quote\\" → Minor UX polish."}},
     "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
@@ -257,7 +263,7 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
   }},
   "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }}
-STRICT RULES: justification = 2-3 sentences, analytical, SIMULIA context, NO quotes. improvement_advice MUST follow [HIGH]/[MEDIUM]/[LOW] format with short quotes and arrows. Respond ONLY with JSON.
+STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values or material grades. Respond ONLY with JSON.
 """
 
     else:
@@ -281,8 +287,8 @@ You are evaluating a FULL CONVERSATION between a user and a Virtual Companion (L
 
 For each criterion:
 - Give a GLOBAL score (0-5) reflecting overall quality across ALL exchanges
-- justification: 2-3 sentences analytical, reference specific exchange numbers, SIMULIA context, NO quotes
-- improvement_advice: [HIGH]/[MEDIUM]/[LOW] bullets with short quotes and arrows, cite exchange numbers
+- justification: 2-3 sentences analytical, reference specific exchange numbers, SIMULIA context, NO quotes, NO technical data
+- improvement_advice: [HIGH]/[MEDIUM]/[LOW] bullets — arrow explains UX gap, cite exchange numbers, NEVER invent technical data
 
 CONVERSATION TO EVALUATE:
 {conversation_formatted}
@@ -324,7 +330,7 @@ APPLICABLE for multi-exchange conversations.
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {{
   "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, reference exchange numbers, SIMULIA context, no quotes.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → better alternative (Exchange N)\\n[MEDIUM] Title — description → improvement\\n[LOW] Title — description → nice-to-have"}},
+    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, reference exchange numbers, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem (Exchange N).\\n[MEDIUM] Title — description → UX gap.\\n[LOW] Title — description → polish."}},
     "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
@@ -337,7 +343,7 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
   }},
   "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }}
-STRICT RULES: justification = 2-3 sentences max, analytical, cite exchange numbers, no quotes. improvement_advice MUST follow [HIGH]/[MEDIUM]/[LOW] format. Respond ONLY with JSON.
+STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] format, arrow = UX gap NOT technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
 """
 
     evaluation = client.chat.completions.create(
@@ -396,14 +402,17 @@ def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
     for col, w in zip("CDEFGHIJKLMN", [4,4,4,4,4,4,4,4,4,4,7.1,8.7]):
         ws.column_dimensions[col].width = w
 
-    ws.merge_cells("C2:N3"); ws["C2"] = title; ws["C2"].font = font(18, True)
-    ws["C2"].fill = fill("FFD7C8"); ws["C2"].alignment = Alignment(horizontal="center", vertical="middle")
+    ws.merge_cells("C2:N3"); ws["C2"] = title
+    ws["C2"].font = Font(name=FONT_NAME, size=18, bold=True)
+    ws["C2"].fill = fill("FFD7C8")
+    ws["C2"].alignment = Alignment(horizontal="center", vertical="middle")
     ws.row_dimensions[2].height = 21; ws.row_dimensions[3].height = 21
 
     ws.merge_cells("C4:N4")
     ws["C4"] = "Grades for the 10 Criteria"
     ws["C4"].font = Font(name=FONT_NAME, size=18, bold=True, color="FFFFFFFF")
-    ws["C4"].fill = fill("4BACC6"); ws["C4"].alignment = Alignment(horizontal="center", vertical="middle")
+    ws["C4"].fill = fill("4BACC6")
+    ws["C4"].alignment = Alignment(horizontal="center", vertical="middle")
     ws.row_dimensions[4].height = 24
 
     ws.row_dimensions[5].height = 21
@@ -428,11 +437,13 @@ def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
     ws.row_dimensions[7].height = 24
     ws["B7"] = "10 Criteria"
     ws["B7"].font = Font(name=FONT_NAME, size=11, bold=True, color="FFFFFFFF")
-    ws["B7"].fill = fill("4BACC6"); ws["B7"].alignment = Alignment(horizontal="left", vertical="middle")
+    ws["B7"].fill = fill("4BACC6")
+    ws["B7"].alignment = Alignment(horizontal="left", vertical="middle")
     ws.merge_cells("C7:N7")
     ws["C7"] = "Detailed evaluations"
     ws["C7"].font = Font(name=FONT_NAME, size=18, bold=True, color="FFFFFFFF")
-    ws["C7"].fill = fill("4BACC6"); ws["C7"].alignment = Alignment(horizontal="center", vertical="middle")
+    ws["C7"].fill = fill("4BACC6")
+    ws["C7"].alignment = Alignment(horizontal="center", vertical="middle")
 
     for i in range(10):
         start_row = 8 + i * 2; color = CRITERION_COLORS[i]
@@ -442,7 +453,7 @@ def generate_export_xlsx(result: dict, title: str = "Exchange 1") -> bytes:
         b.alignment = Alignment(horizontal="left", vertical="center"); b.border = thin_border()
 
         cdata = criteria[i] if i < len(criteria) else {}
-        for j, (label, key) in enumerate([("Why this score", "justification"), ("Improvement advice", "advice")]):
+        for j, (label, key) in enumerate([("Why this score", "justification"), ("How to improve", "advice")]):
             row = start_row + j; value = cdata.get(key, "") or ""
             ws.merge_cells(f"C{row}:N{row}")
             c = ws[f"C{row}"]
