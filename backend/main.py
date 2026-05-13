@@ -78,23 +78,14 @@ These companions assist engineers and designers in complex industrial workflows:
 - PLM data management, BOM, configuration management
 
 TYPICAL USER PROFILES:
-- Senior engineers (10+ years): expect precise technical answers, numerical data, direct recommendations, no hand-holding
+- Senior engineers (10+ years): expect precise technical answers, direct recommendations, no hand-holding
 - Junior engineers / students: may need more guidance, clearer explanations, step-by-step breakdowns
-- IMPORTANT: A good companion DETECTS the user's level from how they phrase their question and ADAPTS accordingly. It also offers to adjust: "Would you like a more detailed explanation or a summary?"
+- A good companion DETECTS the user's level from how they phrase their question and ADAPTS accordingly.
 
-WHAT MAKES A COMPANION RESPONSE EXCELLENT IN THIS CONTEXT:
-- References specific simulation parameters, material properties, or workflow steps from the actual project
-- Proposes to RUN a simulation or analysis rather than just describing what could be done
-- Cites data from the project (CATIA model, ENOVIA database, material library)
-- Adapts vocabulary to detected user level
-- Bridges conversation to the 3D interface (highlights zones, proposes annotations)
-- Anticipates downstream effects (e.g. "changing this parameter will affect your mesh quality")
-
-WHAT MAKES A RESPONSE POOR IN THIS CONTEXT:
-- Generic knowledge-base answers with no connection to the actual project or software
-- No attempt to detect or adapt to the user's expertise level
-- Treating every user as a complete beginner without checking
-- Not proposing any concrete action the agent could perform inside the software
+YOUR ROLE AS EVALUATOR:
+You are a UX researcher — NOT an engineer. You evaluate INTERACTION DESIGN quality only.
+You assess: response structure, user level adaptation, transparency of reasoning, controllability, cognitive load, task segmentation.
+You do NOT assess technical accuracy. You do NOT suggest technical improvements.
 """
 
 ADVICE_FORMAT_INSTRUCTION = """
@@ -116,6 +107,7 @@ STRICT RULES:
 - Keep each bullet under 2 lines
 - Prioritize: HIGH = blocks or significantly degrades user task, MEDIUM = degrades experience, LOW = polish
 - If score is 4 or 5, still provide 1 LOW item for continuous improvement
+- ⚠️ FINAL WARNING: The evaluator is a UX researcher, NOT an engineer. Any numerical value, material name, or technical specification in improvement_advice is a CRITICAL ERROR. Write ONLY about interaction design.
 """
 
 JUSTIFICATION_INSTRUCTION = """
@@ -344,6 +336,8 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
   "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }}
 STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] format, arrow = UX gap NOT technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
+- ⚠️ FINAL WARNING: The evaluator is a UX researcher, NOT an engineer. Any numerical value, material name, or technical specification in improvement_advice is a CRITICAL ERROR. Write ONLY about interaction design.
+
 """
 
     evaluation = client.chat.completions.create(
