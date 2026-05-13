@@ -11,7 +11,12 @@ export function FieldLabel({ label, children }) {
 
 function parseAdviceBullets(text) {
   if (!text) return null
-  const str = Array.isArray(text) ? text.join("\n") : String(text)
+  // Si c'est un array JSON stringifié, on le parse d'abord
+  let str = Array.isArray(text) ? text.join("\n") : String(text)
+  try {
+    const parsed = JSON.parse(str)
+    if (Array.isArray(parsed)) str = parsed.join("\n")
+  } catch {}
   const lines = str.split("\n").map(l => l.trim()).filter(Boolean)
   const bullets = []
   for (const line of lines) {
