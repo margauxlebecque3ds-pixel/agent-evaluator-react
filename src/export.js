@@ -95,11 +95,11 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
 
   // ── Rows 8-37: critères ────────────────────────────────────────────────────
   for (let i = 0; i < 10; i++) {
-    const startRow = 8 + i * 3
+    const startRow = 8 + i * 2
     const color = COLORS[i]
     const cdata = i < criteria.length ? criteria[i] : {}
 
-    ws.mergeCells(`B${startRow}:B${startRow+2}`)
+    ws.mergeCells(`B${startRow}:B${startRow+1}`)
     const bCell = ws.getCell(`B${startRow}`)
     bCell.value = LABELS[i]
     bCell.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF"+color } }
@@ -108,11 +108,9 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
     bCell.border = border(true,true,true,true)
 
     const rows = [
-      ["Observation",   cdata.observed      || ""],
-      ["Justification", cdata.justification || ""],
-      ["Advice",        cdata.advice        || ""],
-    ]
-
+  ["Why this score", cdata.justification || ""],
+  ["How to improve", cdata.advice        || ""],
+]
     rows.forEach(([label, value], j) => {
       const row = startRow + j
       ws.mergeCells(`C${row}:N${row}`)
