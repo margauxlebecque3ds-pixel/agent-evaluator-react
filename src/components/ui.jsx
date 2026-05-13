@@ -9,22 +9,19 @@ export function FieldLabel({ label, children }) {
   )
 }
 
-// Parse [HIGH]/[MEDIUM]/[LOW] bullets from advice text
 function parseAdviceBullets(text) {
   if (!text) return null
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean)
+  const str = Array.isArray(text) ? text.join("\n") : String(text)
+  const lines = str.split("\n").map(l => l.trim()).filter(Boolean)
   const bullets = []
   for (const line of lines) {
     const highMatch = line.match(/^\[HIGH\]\s*(.+)/)
     const medMatch  = line.match(/^\[MEDIUM\]\s*(.+)/)
     const lowMatch  = line.match(/^\[LOW\]\s*(.+)/)
-    if (highMatch)   bullets.push({ level: "HIGH",   text: highMatch[1] })
-    else if (medMatch) bullets.push({ level: "MEDIUM", text: medMatch[1] })
-    else if (lowMatch) bullets.push({ level: "LOW",    text: lowMatch[1] })
-    else if (bullets.length > 0) {
-      // continuation line — append to last bullet
-      bullets[bullets.length - 1].text += " " + line
-    }
+    if (highMatch)        bullets.push({ level: "HIGH",   text: highMatch[1] })
+    else if (medMatch)    bullets.push({ level: "MEDIUM", text: medMatch[1] })
+    else if (lowMatch)    bullets.push({ level: "LOW",    text: lowMatch[1] })
+    else if (bullets.length > 0) bullets[bullets.length - 1].text += " " + line
   }
   return bullets.length > 0 ? bullets : null
 }
@@ -37,8 +34,7 @@ const PRIORITY_STYLES = {
 
 function AdviceBullet({ level, text }) {
   const s = PRIORITY_STYLES[level]
-  // Split on → to highlight the suggestion part
-  const parts = text.split("→")
+  const parts = String(text).split("→")
   const before = parts[0]?.trim()
   const after  = parts[1]?.trim()
 
@@ -62,8 +58,8 @@ function AdviceBullet({ level, text }) {
 }
 
 export function ResultSection({ label, body, highlight }) {
-  const isAdvice = highlight
-  const bullets = isAdvice ? parseAdviceBullets(body) : null
+  const safeBody = body === null || body === undefined ? "" : (typeof body === "object" ? JSON.stringify(body) : String(body))
+  const bullets = highlight ? parseAdviceBullets(safeBody) : null
 
   return (
     <div>
@@ -74,7 +70,7 @@ export function ResultSection({ label, body, highlight }) {
         </div>
       ) : (
         <div style={{ fontSize: "0.84rem", lineHeight: 1.65, color: "var(--fg)", opacity: 0.85, whiteSpace: "pre-wrap", ...(highlight ? { background: "color-mix(in oklab, var(--primary) 6%, transparent)", borderRadius: 8, padding: "8px 12px" } : {}) }}>
-          {body}
+          {safeBody}
         </div>
       )}
     </div>
