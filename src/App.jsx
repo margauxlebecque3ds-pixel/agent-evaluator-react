@@ -19,7 +19,7 @@ export default function App() {
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
   const [runningId, setRunningId] = useState(null)
-  const [result, setResult] = useState(null)
+  const [resultBoth, setResultBoth] = useState(null) // { en: ..., fr: ... }
   const [error, setError] = useState(null)
   const [disclaimerClosed, setDisclaimerClosed] = useState(false)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("eval-api-key") || "")
@@ -34,6 +34,9 @@ export default function App() {
   const t = dict[lang]
   const isDark = theme === "dark"
 
+  // Le résultat affiché suit toujours la langue active
+  const result = resultBoth ? (resultBoth[lang] || resultBoth["en"]) : null
+
   useEffect(() => { localStorage.setItem("eval-lang", lang) }, [lang])
   useEffect(() => { localStorage.setItem("eval-api-key", apiKey) }, [apiKey])
   useEffect(() => {
@@ -47,7 +50,7 @@ export default function App() {
   const openDisclaimer = () => { setDisclaimerClosed(false); localStorage.removeItem("eval-disclaimer") }
 
   const reset = () => {
-    setResult(null); setError(null); setUserQuestion(""); setLeoResponse("")
+    setResultBoth(null); setError(null); setUserQuestion(""); setLeoResponse("")
     setConversation(""); setComment(""); setShowComment(false); setImages([])
     setActiveHistoryId(null)
   }
@@ -57,7 +60,6 @@ export default function App() {
     if (mode === "single" && (!userQuestion.trim() || !leoResponse.trim())) { alert(t.requiredFields); return }
     if (mode === "multi" && !conversation.trim()) { alert(t.requiredFields); return }
 
-    // Créer l'entrée immédiatement avec loading: true
     const entryId = Date.now()
     const newEntry = {
       id: entryId,
@@ -66,7 +68,7 @@ export default function App() {
       mode,
       loading: true,
       avgScore: null,
-      result: null,
+      resultBoth: null,
       inputs: { userQuestion, leoResponse, conversation },
     }
 
@@ -79,28 +81,35 @@ export default function App() {
     setRunningId(entryId)
     setSidebarOpen(true)
     setLoading(true)
-    setResult(null)
+    setResultBoth(null)
 
     try {
-      const r = mode === "single"
-        ? await evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images })
-        : await evaluateMulti({ conversation, comment: comment || undefined, images })
+      // Lancer EN et FR en parallèle
+      const [rEn, rFr] = await Promise.all([
+        mode === "single"
+          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en" })
+          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "en" }),
+        mode === "single"
+          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "fr" })
+          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "fr" }),
+      ])
+
+      const both = { en: rEn, fr: rFr }
 
       const avgScore = (() => {
-        const scores = Object.values(r.evaluation || {}).map(v => v.score).filter(s => s !== null && s !== undefined)
+        const scores = (rEn.criteria || []).map(c => c.score).filter(s => s !== null && s !== undefined)
         return scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null
       })()
 
       setHistory(prev => {
-        const updated = prev.map(h => h.id === entryId ? { ...h, loading: false, result: r, avgScore } : h)
+        const updated = prev.map(h => h.id === entryId ? { ...h, loading: false, resultBoth: both, avgScore } : h)
         localStorage.setItem("eval-history", JSON.stringify(updated))
         return updated
       })
 
-      // Afficher le résultat seulement si l'utilisateur est encore sur cet onglet
       setActiveHistoryId(cur => {
         if (cur === entryId) {
-          setResult(r)
+          setResultBoth(both)
           setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
         }
         return cur
@@ -119,7 +128,6 @@ export default function App() {
     }
   }
 
-  // Ce que l'utilisateur voit = l'onglet actif
   const isViewingRunning = activeHistoryId === runningId && loading
 
   const sidebarProps = {
@@ -141,7 +149,7 @@ export default function App() {
         setLeoResponse(entry.inputs.leoResponse || "")
         setConversation(entry.inputs.conversation || "")
       }
-      setResult(entry.result || null)
+      setResultBoth(entry.resultBoth || null)
       setSidebarOpen(false)
       setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100)
     },
@@ -172,7 +180,7 @@ export default function App() {
               showComment={showComment} setShowComment={setShowComment}
               images={images} setImages={setImages}
               loading={isViewingRunning}
-              result={result} setResult={setResult} error={error}
+              result={result} setResult={() => {}} error={error}
               run={run} reset={reset}
             />
         }

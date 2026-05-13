@@ -11,11 +11,11 @@ async function imagesToBase64(files) {
   )
 }
 
-export async function evaluateSingle({ userQuestion, leoResponse, comment, images = [] }) {
+export async function evaluateSingle({ userQuestion, leoResponse, comment, images = [], language }) {
   const payload = {
     prompt: userQuestion,
     response: leoResponse,
-    language: localStorage.getItem("eval-lang") || "en",
+    language: language || localStorage.getItem("eval-lang") || "en",
     user_comment: comment || "",
     image_b64: images.length ? (await imagesToBase64(images)).map(i => i.data.split(",")[1]) : null,
   }
@@ -28,10 +28,10 @@ export async function evaluateSingle({ userQuestion, leoResponse, comment, image
   return normalize(await res.json())
 }
 
-export async function evaluateMulti({ conversation, comment, images = [] }) {
+export async function evaluateMulti({ conversation, comment, images = [], language }) {
   const payload = {
     conversation,
-    language: localStorage.getItem("eval-lang") || "en",
+    language: language || localStorage.getItem("eval-lang") || "en",
     user_comment: comment || "",
     image_b64: images.length ? (await imagesToBase64(images)).map(i => i.data.split(",")[1]) : null,
   }
