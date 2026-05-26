@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.responses import Response
-import json
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -23,6 +22,7 @@ class SingleRequest(BaseModel):
     user_comment: Optional[str] = ""
     image_b64: Optional[List[str]] = None
     api_key: Optional[str] = None
+    active_heuristics: Optional[List[str]] = None
 
 class MultiRequest(BaseModel):
     conversation: str
@@ -30,10 +30,10 @@ class MultiRequest(BaseModel):
     user_comment: Optional[str] = ""
     image_b64: Optional[List[str]] = None
     api_key: Optional[str] = None
+    active_heuristics: Optional[List[str]] = None
 
 @app.post("/evaluate/single")
 def evaluate_single(req: SingleRequest):
-    # Use user's api_key if provided, otherwise fall back to .env
     if req.api_key:
         os.environ["MISTRAL_API_KEY"] = req.api_key
     result = evaluate_response(
@@ -42,7 +42,8 @@ def evaluate_single(req: SingleRequest):
         language=req.language,
         mode="single",
         image_b64=req.image_b64,
-        user_comment=req.user_comment or ""
+        user_comment=req.user_comment or "",
+        active_heuristics=req.active_heuristics,
     )
     return {"result": result}
 
@@ -56,15 +57,14 @@ def evaluate_multi(req: MultiRequest):
         mode="multi",
         conversation_raw=req.conversation,
         image_b64=req.image_b64,
-        user_comment=req.user_comment or ""
+        user_comment=req.user_comment or "",
+        active_heuristics=req.active_heuristics,
     )
     return {"result": result}
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-
 
 class ExportRequest(BaseModel):
     result: dict

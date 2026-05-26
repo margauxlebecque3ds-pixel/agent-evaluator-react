@@ -6,11 +6,26 @@ import HomePage from "./components/HomePage"
 import HeuristicsPage from "./components/HeuristicsPage"
 import Sidebar from "./components/Sidebar"
 
+const ALL_HEURISTICS = [
+  "request_adequacy",
+  "transparency_of_reasoning",
+  "contextual_relevance",
+  "human_controllability",
+  "cognitive_load_reduction",
+  "reliability_and_anticipation",
+  "task_segmentation",
+  "interface_and_3d_model_relationship",
+  "interoperability",
+  "consistency_over_time",
+]
+
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem("eval-lang") || "en")
   const [theme, setTheme] = useState(() => localStorage.getItem("eval-theme") || "dark")
   const [page, setPage] = useState("home")
   const [mode, setMode] = useState("single")
+  const [evalMode, setEvalMode] = useState("standard") // "standard" | "focus"
+  const [selectedHeuristics, setSelectedHeuristics] = useState(ALL_HEURISTICS)
   const [userQuestion, setUserQuestion] = useState("")
   const [leoResponse, setLeoResponse] = useState("")
   const [conversation, setConversation] = useState("")
@@ -19,7 +34,7 @@ export default function App() {
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
   const [runningId, setRunningId] = useState(null)
-  const [resultBoth, setResultBoth] = useState(null) // { en: ..., fr: ... }
+  const [resultBoth, setResultBoth] = useState(null)
   const [error, setError] = useState(null)
   const [disclaimerClosed, setDisclaimerClosed] = useState(false)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("eval-api-key") || "")
@@ -33,8 +48,6 @@ export default function App() {
 
   const t = dict[lang]
   const isDark = theme === "dark"
-
-  // Le résultat affiché suit toujours la langue active
   const result = resultBoth ? (resultBoth[lang] || resultBoth["en"]) : null
 
   useEffect(() => { localStorage.setItem("eval-lang", lang) }, [lang])
@@ -49,16 +62,27 @@ export default function App() {
   const closeDisclaimer = () => { setDisclaimerClosed(true); localStorage.setItem("eval-disclaimer", "1") }
   const openDisclaimer = () => { setDisclaimerClosed(false); localStorage.removeItem("eval-disclaimer") }
 
+  const toggleHeuristic = (key) => {
+    setSelectedHeuristics(prev =>
+      prev.includes(key)
+        ? prev.filter(h => h !== key)
+        : [...prev, key]
+    )
+  }
+
   const reset = () => {
     setResultBoth(null); setError(null); setUserQuestion(""); setLeoResponse("")
     setConversation(""); setComment(""); setShowComment(false); setImages([])
     setActiveHistoryId(null)
   }
 
+  const activeHeuristics = evalMode === "standard" ? ALL_HEURISTICS : selectedHeuristics
+
   const run = async () => {
     setError(null)
     if (mode === "single" && (!userQuestion.trim() || !leoResponse.trim())) { alert(t.requiredFields); return }
     if (mode === "multi" && !conversation.trim()) { alert(t.requiredFields); return }
+    if (evalMode === "focus" && selectedHeuristics.length === 0) { alert("Please select at least one heuristic."); return }
 
     const entryId = Date.now()
     const newEntry = {
@@ -66,6 +90,7 @@ export default function App() {
       name: null,
       date: new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }),
       mode,
+      evalMode,
       loading: true,
       avgScore: null,
       resultBoth: null,
@@ -84,14 +109,13 @@ export default function App() {
     setResultBoth(null)
 
     try {
-      // Lancer EN et FR en parallèle
       const [rEn, rFr] = await Promise.all([
         mode === "single"
-          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en" })
-          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "en" }),
+          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en", activeHeuristics })
+          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "en", activeHeuristics }),
         mode === "single"
-          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "fr" })
-          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "fr" }),
+          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "fr", activeHeuristics })
+          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "fr", activeHeuristics }),
       ])
 
       const both = { en: rEn, fr: rFr }
@@ -173,6 +197,9 @@ export default function App() {
               apiKey={apiKey} setApiKey={setApiKey}
               open={sidebarOpen}
               mode={mode} setMode={setMode}
+              evalMode={evalMode} setEvalMode={setEvalMode}
+              selectedHeuristics={selectedHeuristics} toggleHeuristic={toggleHeuristic}
+              allHeuristics={ALL_HEURISTICS}
               userQuestion={userQuestion} setUserQuestion={setUserQuestion}
               leoResponse={leoResponse} setLeoResponse={setLeoResponse}
               conversation={conversation} setConversation={setConversation}

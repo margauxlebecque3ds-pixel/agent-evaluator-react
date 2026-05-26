@@ -9,6 +9,19 @@ client = OpenAI(
     base_url="https://api.mistral.ai/v1"
 )
 
+ALL_HEURISTICS = [
+    "request_adequacy",
+    "transparency_of_reasoning",
+    "contextual_relevance",
+    "human_controllability",
+    "cognitive_load_reduction",
+    "reliability_and_anticipation",
+    "task_segmentation",
+    "interface_and_3d_model_relationship",
+    "interoperability",
+    "consistency_over_time",
+]
+
 def call_main_agent(prompt):
     response = client.chat.completions.create(
         model="mistral-large-latest",
@@ -68,6 +81,61 @@ def analyze_interface_image(image_b64):
     except Exception as e:
         return "Image analysis unavailable: " + str(e)
 
+def build_json_template(active_heuristics, has_image=False, mode="single"):
+    """Build the JSON output template dynamically based on active heuristics."""
+    always_na = {
+        "interoperability": "Not applicable: no external data required.",
+        "consistency_over_time": "Not applicable: single exchange." if mode == "single" else None,
+        "interface_and_3d_model_relationship": None,
+    }
+
+    parts = {}
+    for key in ALL_HEURISTICS:
+        if active_heuristics and key not in active_heuristics:
+            # Not selected in Focus mode → N/A
+            parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not evaluated in Focus mode.", "improvement_advice": "N/A"}}'
+        elif key == "consistency_over_time" and mode == "single":
+            parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: single exchange.", "improvement_advice": "N/A"}}'
+        elif key == "interoperability":
+            parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}}'
+        elif key == "interface_and_3d_model_relationship":
+            if has_image:
+                parts[key] = f'"{key}": {{"score": 0, "applicable": true, "justification": "Based on the screenshot analysis provided.", "improvement_advice": "..."}}'
+            else:
+                parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: no screenshot or 3D context provided.", "improvement_advice": "N/A"}}'
+        else:
+            parts[key] = f'"{key}": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}}'
+
+    # First key gets the full example
+    first_active = next((k for k in ALL_HEURISTICS if active_heuristics is None or k in active_heuristics), None)
+    if first_active and first_active not in ["interoperability", "consistency_over_time", "interface_and_3d_model_relationship"]:
+        parts[first_active] = f'"{first_active}": {{"score": 0, "applicable": true, "justification": "2-3 sentences, analytical, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem.\\n[MEDIUM] Title — \\"short quote\\" → UX gap.\\n[LOW] Title — \\"quote\\" → Minor UX polish."}}'
+
+    lines = [f"    {v}" for v in parts.values()]
+    return '{{\n  "evaluation": {{\n' + ',\n'.join(lines) + '\n  }},\n  "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]\n}}'
+
+def build_focus_instruction(active_heuristics):
+    if not active_heuristics:
+        return ""
+    names = {
+        "request_adequacy": "Request Adequacy",
+        "transparency_of_reasoning": "Transparency of Reasoning",
+        "contextual_relevance": "Contextual Relevance",
+        "human_controllability": "Human Controllability",
+        "cognitive_load_reduction": "Cognitive Load Reduction",
+        "reliability_and_anticipation": "Reliability & Anticipation",
+        "task_segmentation": "Task Segmentation",
+        "interface_and_3d_model_relationship": "Interface & 3D Model Relationship",
+        "interoperability": "Interoperability",
+        "consistency_over_time": "Consistency Over Time",
+    }
+    selected = [names[k] for k in active_heuristics if k in names]
+    skipped = [names[k] for k in ALL_HEURISTICS if k not in active_heuristics and k in names]
+    instruction = f"\nFOCUS MODE — Evaluate ONLY these heuristics: {', '.join(selected)}.\n"
+    if skipped:
+        instruction += f"Set these as NOT EVALUATED (score: null, applicable: false): {', '.join(skipped)}.\n"
+    return instruction
+
 SIMULIA_CONTEXT = """
 EVALUATION CONTEXT — READ CAREFULLY:
 You are evaluating a Virtual Companion (AURA, LEO, or MARIE) — an AI agent embedded inside Dassault Systèmes 3DEXPERIENCE platform (SIMULIA, CATIA, ENOVIA).
@@ -120,11 +188,14 @@ Write 2-3 sentences maximum. Explain WHY this score was given in plain analytica
 - NO technical data fabrication — describe UX problems, not engineering solutions
 """
 
-def evaluate_response(prompt, response_text, language="en", mode="single", conversation_raw="", image_b64=None, user_comment=None):
+def evaluate_response(prompt, response_text, language="en", mode="single", conversation_raw="", image_b64=None, user_comment=None, active_heuristics=None):
     if language == "fr":
         lang_instruction = "Reponds UNIQUEMENT en francais. Tous les champs du JSON doivent etre rediges en francais. Les labels [HIGH]/[MEDIUM]/[LOW] restent en anglais."
     else:
         lang_instruction = "Respond ONLY in English. All JSON fields must be written in English."
+
+    focus_instruction = build_focus_instruction(active_heuristics)
+    has_image = bool(image_b64)
 
     if mode == "single":
         comment_text = ""
@@ -136,6 +207,8 @@ def evaluate_response(prompt, response_text, language="en", mode="single", conve
             image_analysis = analyze_interface_image(image_b64)
             image_analysis_text = "\n\nINTERFACE SCREENSHOT ANALYSIS (use for Criterion 8):\n" + image_analysis + "\n\nCriterion 8 IS NOW APPLICABLE."
 
+        json_template = build_json_template(active_heuristics, has_image=has_image, mode="single")
+
         evaluation_prompt = f"""
 {SIMULIA_CONTEXT}
 
@@ -144,6 +217,7 @@ LANGUAGE INSTRUCTION: {lang_instruction}
 {ADVICE_FORMAT_INSTRUCTION}
 
 {JUSTIFICATION_INSTRUCTION}
+{focus_instruction}
 
 You are evaluating a SINGLE EXCHANGE between a user and a Virtual Companion (LEO/AURA/MARIE).
 
@@ -224,12 +298,6 @@ NOT APPLICABLE if no 3D model interaction and no screenshot provided.
 
 CRITERION 9 - Interoperability (Data Access)
 NOT APPLICABLE if no external data needed.
-0: Only uses current message data.
-1: Alludes to external data but fabricates values.
-2: References one source vaguely.
-3: References one identified source with specific values.
-4: Cross-references multiple sources.
-5: Full integration — all sources cited, values cross-checked.
 
 CRITERION 10 - Consistency Over Time ("Memory")
 NOT APPLICABLE for a single exchange.
@@ -240,31 +308,18 @@ AGENT RESPONSE: {response_text}
 {image_analysis_text}
 
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
-{{
-  "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, analytical, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem: what is missing from an interaction design perspective.\\n[MEDIUM] Title — \\"short quote\\" → UX gap: what interaction pattern should have been used.\\n[LOW] Title — \\"quote\\" → Minor UX polish."}},
-    "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "cognitive_load_reduction": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "reliability_and_anticipation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "task_segmentation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "interface_and_3d_model_relationship": {{"score": 0, "applicable": true, "justification": "Based on the screenshot analysis provided.", "improvement_advice": "..."}},
-    "interoperability": {{"score": null, "applicable": false, "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}},
-    "consistency_over_time": {{"score": null, "applicable": false, "justification": "Not applicable: single exchange.", "improvement_advice": "N/A"}}
-  }},
-  "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
-}}
-STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values or material grades. Respond ONLY with JSON.
+{json_template}
+STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
 """
 
     else:
         exchanges = parse_conversation(conversation_raw)
         if not exchanges:
-            return evaluate_response(prompt, conversation_raw, language, "single", "")
+            return evaluate_response(prompt, conversation_raw, language, "single", "", active_heuristics=active_heuristics)
 
         conversation_formatted = format_conversation_for_prompt(exchanges)
         n_exchanges = len(exchanges) // 2
+        json_template = build_json_template(active_heuristics, has_image=has_image, mode="multi")
 
         evaluation_prompt = f"""
 {SIMULIA_CONTEXT}
@@ -274,6 +329,7 @@ LANGUAGE INSTRUCTION: {lang_instruction}
 {ADVICE_FORMAT_INSTRUCTION}
 
 {JUSTIFICATION_INSTRUCTION}
+{focus_instruction}
 
 You are evaluating a FULL CONVERSATION between a user and a Virtual Companion (LEO/AURA/MARIE). The conversation has {n_exchanges} exchanges.
 
@@ -320,24 +376,9 @@ APPLICABLE for multi-exchange conversations.
 0: No memory, fresh start each exchange. 1: Vague inconsistent references. 2: Recalls some info inconsistently. 3: Reasonable memory, misses contradictions. 4: Good memory, references earlier decisions. 5: Perfect memory, proactively applies context.
 
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
-{{
-  "evaluation": {{
-    "request_adequacy": {{"score": 0, "applicable": true, "justification": "2-3 sentences, reference exchange numbers, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem (Exchange N).\\n[MEDIUM] Title — description → UX gap.\\n[LOW] Title — description → polish."}},
-    "transparency_of_reasoning": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "contextual_relevance": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "human_controllability": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "cognitive_load_reduction": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "reliability_and_anticipation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "task_segmentation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "justification": "Not applicable: no 3D interaction.", "improvement_advice": "N/A"}},
-    "interoperability": {{"score": null, "applicable": false, "justification": "Not applicable: no external data.", "improvement_advice": "N/A"}},
-    "consistency_over_time": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}}
-  }},
-  "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
-}}
+{json_template}
 STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] format, arrow = UX gap NOT technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
 - ⚠️ FINAL WARNING: The evaluator is a UX researcher, NOT an engineer. Any numerical value, material name, or technical specification in improvement_advice is a CRITICAL ERROR. Write ONLY about interaction design.
-
 """
 
     evaluation = client.chat.completions.create(

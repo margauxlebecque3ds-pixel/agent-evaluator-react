@@ -1,8 +1,9 @@
 import { useRef } from "react"
 import {
   MessageSquare, MessagesSquare, Play, Loader2, RotateCcw,
-  Download, Sparkles, AlertTriangle, ArrowUpRight
+  Download, Sparkles, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp
 } from "lucide-react"
+import { useState } from "react"
 import { exportEvaluationToExcel } from "../export"
 import { scoreMeta } from "../heuristics"
 import Disclaimer from "./Disclaimer"
@@ -13,10 +14,39 @@ import CommentBox from "./CommentBox"
 import Tooltip from "./Tooltip"
 import { FieldLabel, ResultSection, AttachList } from "./ui"
 
+const HEURISTIC_LABELS = {
+  en: {
+    request_adequacy: "H1 — Request Adequacy",
+    transparency_of_reasoning: "H2 — Transparency of Reasoning",
+    contextual_relevance: "H3 — Contextual Relevance",
+    human_controllability: "H4 — Human Controllability",
+    cognitive_load_reduction: "H5 — Cognitive Load Reduction",
+    reliability_and_anticipation: "H6 — Reliability & Anticipation",
+    task_segmentation: "H7 — Task Segmentation",
+    interface_and_3d_model_relationship: "H8 — Interface & 3D Model",
+    interoperability: "H9 — Interoperability",
+    consistency_over_time: "H10 — Consistency Over Time",
+  },
+  fr: {
+    request_adequacy: "H1 — Adéquation de la requête",
+    transparency_of_reasoning: "H2 — Transparence du raisonnement",
+    contextual_relevance: "H3 — Pertinence contextuelle",
+    human_controllability: "H4 — Contrôlabilité humaine",
+    cognitive_load_reduction: "H5 — Réduction de la charge cognitive",
+    reliability_and_anticipation: "H6 — Fiabilité & Anticipation",
+    task_segmentation: "H7 — Segmentation des actions",
+    interface_and_3d_model_relationship: "H8 — Interface & Modèle 3D",
+    interoperability: "H9 — Interopérabilité",
+    consistency_over_time: "H10 — Cohérence dans le temps",
+  }
+}
+
 export default function HomePage({
   t, lang, changeLang, theme, toggleTheme, isDark,
   disclaimerClosed, closeDisclaimer, openDisclaimer,
   setPage, mode, setMode,
+  evalMode, setEvalMode,
+  selectedHeuristics, toggleHeuristic, allHeuristics,
   userQuestion, setUserQuestion,
   leoResponse, setLeoResponse,
   conversation, setConversation,
@@ -28,7 +58,9 @@ export default function HomePage({
   apiKey, setApiKey,
 }) {
   const fileRef = useRef(null)
+  const [focusOpen, setFocusOpen] = useState(false)
   const addImages = (files) => setImages(prev => [...prev, ...Array.from(files).filter(f => f.type.startsWith("image/"))])
+  const labels = HEURISTIC_LABELS[lang] || HEURISTIC_LABELS.en
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -86,7 +118,7 @@ export default function HomePage({
         </div>
 
         {/* Mode switch */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 16 }}>
           <div className="glass" style={{ display: "inline-flex", borderRadius: 999, padding: 4, gap: 4 }}>
             {[["single", MessageSquare, t.modeSingle], ["multi", MessagesSquare, t.modeMulti]].map(([m, Icon, label]) => (
               <div key={m} style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -104,6 +136,71 @@ export default function HomePage({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Eval mode — Standard / Focus */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg2)" }}>
+              {lang === "en" ? "Evaluation mode" : "Mode d'évaluation"}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[["standard", lang === "en" ? "Standard — all 10 heuristics" : "Standard — 10 heuristiques"], ["focus", lang === "en" ? "Focus — custom selection" : "Focus — sélection personnalisée"]].map(([em, label]) => (
+              <button key={em} onClick={() => { setEvalMode(em); if (em === "focus") setFocusOpen(true) }}
+                style={{
+                  borderRadius: 999, padding: "7px 16px", fontSize: "0.82rem", fontWeight: 500,
+                  border: `1.5px solid ${evalMode === em ? "var(--primary)" : "var(--border)"}`,
+                  background: evalMode === em ? "color-mix(in oklab, var(--primary) 12%, transparent)" : "transparent",
+                  color: evalMode === em ? "var(--primary)" : "var(--fg2)",
+                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Focus panel — dropdown checkboxes */}
+          {evalMode === "focus" && (
+            <div style={{ marginTop: 12 }}>
+              <button onClick={() => setFocusOpen(v => !v)}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--fg2)", fontSize: "0.78rem", fontFamily: "inherit", padding: 0, marginBottom: 8 }}>
+                {focusOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {lang === "en"
+                  ? `${selectedHeuristics.length} heuristic${selectedHeuristics.length > 1 ? "s" : ""} selected`
+                  : `${selectedHeuristics.length} heuristique${selectedHeuristics.length > 1 ? "s" : ""} sélectionnée${selectedHeuristics.length > 1 ? "s" : ""}`}
+              </button>
+
+              {focusOpen && (
+                <div className="glass" style={{ borderRadius: 14, padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", maxWidth: 640 }}>
+                  {allHeuristics.map(key => (
+                    <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedHeuristics.includes(key)}
+                        onChange={() => toggleHeuristic(key)}
+                        style={{ accentColor: "var(--primary)", width: 14, height: 14, cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "0.82rem", color: selectedHeuristics.includes(key) ? "var(--fg)" : "var(--fg2)", fontWeight: selectedHeuristics.includes(key) ? 500 : 400 }}>
+                        {labels[key]}
+                      </span>
+                    </label>
+                  ))}
+                  <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8, marginTop: 4, paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                    <button onClick={() => allHeuristics.forEach(k => !selectedHeuristics.includes(k) && toggleHeuristic(k))}
+                      style={{ fontSize: "0.72rem", color: "var(--primary)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+                      {lang === "en" ? "Select all" : "Tout sélectionner"}
+                    </button>
+                    <span style={{ color: "var(--border)" }}>·</span>
+                    <button onClick={() => allHeuristics.forEach(k => selectedHeuristics.includes(k) && toggleHeuristic(k))}
+                      style={{ fontSize: "0.72rem", color: "var(--fg2)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+                      {lang === "en" ? "Clear all" : "Tout décocher"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Form card */}
@@ -132,19 +229,20 @@ export default function HomePage({
           <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => e.target.files && addImages(e.target.files)} />
 
           {/* Run row */}
-        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        {(result || error) ? (
-            <button onClick={reset} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
-            <RotateCcw size={14} /> {t.newEvaluation}
+          <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            {(result || error) ? (
+              <button onClick={reset} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
+                <RotateCcw size={14} /> {t.newEvaluation}
+              </button>
+            ) : <span />}
+            <button onClick={run} disabled={loading} className="btn-primary" style={{ borderRadius: 999, padding: "12px 32px", fontSize: "0.9rem" }}>
+              {loading
+                ? <><Loader2 size={16} className="spin" /> {t.evaluating}</>
+                : <><Play size={15} style={{ fill: "currentColor" }} /> {t.runEvaluation}</>}
             </button>
-        ) : <span />}
-        <button onClick={run} disabled={loading} className="btn-primary" style={{ borderRadius: 999, padding: "12px 32px", fontSize: "0.9rem" }}>
-            {loading
-            ? <><Loader2 size={16} className="spin" /> {t.evaluating}</>
-            : <><Play size={15} style={{ fill: "currentColor" }} /> {t.runEvaluation}</>}
-        </button>
+          </div>
         </div>
-        </div>
+
         {/* Error */}
         {error && (
           <div className="fade-up" style={{ marginTop: 20, borderRadius: 16, padding: 16, background: "color-mix(in oklab, var(--danger) 12%, transparent)", border: "1px solid color-mix(in oklab, var(--danger) 40%, transparent)", display: "flex", gap: 12 }}>

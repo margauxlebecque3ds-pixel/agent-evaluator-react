@@ -11,13 +11,14 @@ async function imagesToBase64(files) {
   )
 }
 
-export async function evaluateSingle({ userQuestion, leoResponse, comment, images = [], language }) {
+export async function evaluateSingle({ userQuestion, leoResponse, comment, images = [], language, activeHeuristics }) {
   const payload = {
     prompt: userQuestion,
     response: leoResponse,
     language: language || localStorage.getItem("eval-lang") || "en",
     user_comment: comment || "",
     image_b64: images.length ? (await imagesToBase64(images)).map(i => i.data.split(",")[1]) : null,
+    active_heuristics: activeHeuristics || null,
   }
   const res = await fetch(`${API_BASE}/evaluate/single`, {
     method: "POST",
@@ -28,12 +29,13 @@ export async function evaluateSingle({ userQuestion, leoResponse, comment, image
   return normalize(await res.json())
 }
 
-export async function evaluateMulti({ conversation, comment, images = [], language }) {
+export async function evaluateMulti({ conversation, comment, images = [], language, activeHeuristics }) {
   const payload = {
     conversation,
     language: language || localStorage.getItem("eval-lang") || "en",
     user_comment: comment || "",
     image_b64: images.length ? (await imagesToBase64(images)).map(i => i.data.split(",")[1]) : null,
+    active_heuristics: activeHeuristics || null,
   }
   const res = await fetch(`${API_BASE}/evaluate/multi`, {
     method: "POST",
