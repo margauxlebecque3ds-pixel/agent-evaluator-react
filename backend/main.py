@@ -53,7 +53,7 @@ def analyze_interface_image(image_b64):
                     "content": [
                         {
                             "type": "image_url",
-                            "image_url": "data:image/png;base64," + image_b64
+                            "image_url": "data:image/png;base64," + (image_b64[0] if isinstance(image_b64, list) else image_b64)
                         },
                         {
                             "type": "text",
@@ -249,7 +249,7 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
     "cognitive_load_reduction": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "reliability_and_anticipation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
     "task_segmentation": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}},
-    "interface_and_3d_model_relationship": {{"score": null, "applicable": false, "justification": "Not applicable: no screenshot or 3D context provided.", "improvement_advice": "N/A"}},
+    "interface_and_3d_model_relationship": {{"score": 0, "applicable": true, "justification": "Based on the screenshot analysis provided.", "improvement_advice": "..."}},
     "interoperability": {{"score": null, "applicable": false, "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}},
     "consistency_over_time": {{"score": null, "applicable": false, "justification": "Not applicable: single exchange.", "improvement_advice": "N/A"}}
   }},
