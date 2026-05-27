@@ -9,6 +9,22 @@ const LABELS = [
   "I. Interoperability","J. Consistency over time",
 ]
 
+function calcHeight(text, charsPerLine = 75, lineHeightPt = 14, minHeight = 40) {
+  if (!text) return 20
+  const lines = text.split("\n").reduce((acc, line) => {
+    return acc + Math.max(1, Math.ceil(line.length / charsPerLine))
+  }, 0)
+  return Math.max(minHeight, lines * lineHeightPt)
+}
+
+function calcAvg(criteria) {
+  const scores = criteria
+    .map(c => c.score)
+    .filter(s => s !== null && s !== undefined && typeof s === "number")
+  if (!scores.length) return ""
+  return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)
+}
+
 export async function exportEvaluationToExcel(result, title = "Exchange 1") {
   const wb = new ExcelJS.Workbook()
   const ws = wb.addWorksheet("Sheet1")
@@ -61,6 +77,7 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
   // ── Row 6: scores ──────────────────────────────────────────────────────────
   ws.getRow(6).height = 21
   const criteria = result.criteria || []
+
   LETTERS.forEach((_, i) => {
     const col = String.fromCharCode(67 + i)
     const cell = ws.getCell(`${col}6`)
@@ -69,12 +86,17 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
     cell.font = { name:"Aptos Narrow", size:11 }
     cell.alignment = { horizontal:"center" }
   })
+
+  // Avg calculé en JS
   const avgCell = ws.getCell("M6")
-  avgCell.value = { formula:"AVERAGEIF(C6:L6,\"<>N/A\")" }
+  avgCell.value = calcAvg(criteria)
   avgCell.font = { name:"Aptos Narrow", size:11 }
   avgCell.alignment = { horizontal:"center" }
+
+  // Sum calculé en JS
   const sumCell = ws.getCell("N6")
-  sumCell.value = { formula:"SUM(C6:L6)" }
+  const scores = criteria.map(c => c.score).filter(s => typeof s === "number")
+  sumCell.value = scores.length ? scores.reduce((a,b) => a+b, 0) : ""
   sumCell.font = { name:"Aptos Narrow", size:11 }
   sumCell.alignment = { horizontal:"center" }
 
@@ -93,7 +115,7 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
   c7.fill = { type:"pattern", pattern:"solid", fgColor:{ argb:"FF4BACC6" } }
   c7.alignment = { horizontal:"center", vertical:"middle" }
 
-  // ── Rows 8-37: critères ────────────────────────────────────────────────────
+  // ── Rows: critères ─────────────────────────────────────────────────────────
   for (let i = 0; i < 10; i++) {
     const startRow = 8 + i * 2
     const color = COLORS[i]
@@ -108,9 +130,10 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
     bCell.border = border(true,true,true,true)
 
     const rows = [
-  ["Why this score", cdata.justification || ""],
-  ["How to improve", cdata.advice        || ""],
-]
+      ["Why this score", cdata.justification || ""],
+      ["How to improve", cdata.advice        || ""],
+    ]
+
     rows.forEach(([label, value], j) => {
       const row = startRow + j
       ws.mergeCells(`C${row}:N${row}`)
@@ -124,18 +147,8 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
         : label
 
       cell.alignment = { horizontal:"left", vertical:"top", wrapText:true }
-
-      // Bordure : top sur Observation, bottom sur Advice, left toujours
-      cell.border = border(
-        true,               // left
-        false,              // right
-        j === 0,            // top sur première ligne
-        j === 1,            // bottom sur dernière ligne
-      )
-
-  const charsPerLine = 85
-  const nbLines = value ? Math.ceil(value.length / charsPerLine) + 1 : 1
-  ws.getRow(row).height = value ? Math.max(40, nbLines * 16) : 20
+      cell.border = border(true, false, j === 0, j === 1)
+      ws.getRow(row).height = calcHeight(value)
     })
   }
 
