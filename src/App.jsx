@@ -210,7 +210,12 @@ export default function App() {
               loading={isViewingRunning}
               result={result} setResult={() => {}} error={error}
               run={run} reset={reset}
-              activeEntryName={history.find(h => h.id === activeHistoryId)?.name || `Test ${history.findIndex(h => h.id === activeHistoryId) + 1}` || "Exchange"}
+              title={(() => {
+  const idx = history.findIndex(h => h.id === activeHistoryId)
+  const entry = history[idx]
+  if (!entry) return "Exchange"
+  return entry.name || `Test ${history.length - idx}`
+})()}
             />
         }
       </div>
