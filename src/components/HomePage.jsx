@@ -49,6 +49,7 @@ export default function HomePage({
   selectedHeuristics, toggleHeuristic, allHeuristics,
   userQuestion, setUserQuestion,
   leoResponse, setLeoResponse,
+  title = "Exchange",
   conversation, setConversation,
   comment, setComment,
   showComment, setShowComment,
@@ -260,7 +261,7 @@ export default function HomePage({
           <section id="results" className="fade-up" style={{ marginTop: 48 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
               <h2 style={{ fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 700, letterSpacing: "-0.025em" }}>{t.results}</h2>
-              <button onClick={() => exportEvaluationToExcel(result, activeEntryName|| "Exchange")} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
+              <button onClick={() => exportEvaluationToExcel(result, title || "Exchange")} className="btn-ghost" style={{ borderRadius: 999, padding: "8px 18px", fontSize: "0.82rem" }}>
                 <Download size={14} /> {t.exportExcel}
               </button>
             </div>
