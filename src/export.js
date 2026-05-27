@@ -70,7 +70,7 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
     cell.alignment = { horizontal:"center" }
   })
   const avgCell = ws.getCell("M6")
-  avgCell.value = { formula:"AVERAGE(C6:L6)" }
+  avgCell.value = { formula:"AVERAGEIF(C6:L6,\"<>N/A\")" }
   avgCell.font = { name:"Aptos Narrow", size:11 }
   avgCell.alignment = { horizontal:"center" }
   const sumCell = ws.getCell("N6")
@@ -130,12 +130,12 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
         true,               // left
         false,              // right
         j === 0,            // top sur première ligne
-        j === 2,            // bottom sur dernière ligne
+        j === 1,            // bottom sur dernière ligne
       )
 
-   ws.getRow(row).height = value
-  ? Math.max(45, Math.min(value.length * 0.8, 200))
-  : 20
+  const charsPerLine = 85
+  const nbLines = value ? Math.ceil(value.length / charsPerLine) + 1 : 1
+  ws.getRow(row).height = value ? Math.max(40, nbLines * 16) : 20
     })
   }
 
