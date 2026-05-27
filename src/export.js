@@ -11,7 +11,8 @@ const LABELS = [
 
 function calcHeight(text, charsPerLine = 75, lineHeightPt = 14, minHeight = 40) {
   if (!text) return 20
-  const lines = text.split("\n").reduce((acc, line) => {
+  const str = typeof text === "object" ? JSON.stringify(text) : String(text)
+  const lines = str.split("\n").reduce((acc, line) => {
     return acc + Math.max(1, Math.ceil(line.length / charsPerLine))
   }, 0)
   return Math.max(minHeight, lines * lineHeightPt)
