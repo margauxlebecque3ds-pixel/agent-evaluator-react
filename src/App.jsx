@@ -94,7 +94,7 @@ export default function App() {
       loading: true,
       avgScore: null,
       resultBoth: null,
-      inputs: { userQuestion, leoResponse, conversation },
+      inputs: { userQuestion, leoResponse, conversation, comment },
     }
 
     setHistory(prev => {
@@ -172,6 +172,7 @@ export default function App() {
         setUserQuestion(entry.inputs.userQuestion || "")
         setLeoResponse(entry.inputs.leoResponse || "")
         setConversation(entry.inputs.conversation || "")
+        setComment(entry.inputs.comment || "")
       }
       setResultBoth(entry.resultBoth || null)
       setSidebarOpen(false)
