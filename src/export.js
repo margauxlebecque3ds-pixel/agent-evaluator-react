@@ -140,16 +140,18 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
       ws.mergeCells(`C${row}:N${row}`)
       const cell = ws.getCell(`C${row}`)
 
+      const plainText = value ? `${label}: ${value}` : label
+      
       cell.value = value
         ? { richText: [
             { text: `${label}: `, font:{ name:"Aptos Narrow", size:11, bold:true } },
-            { text: value,        font:{ name:"Aptos Narrow", size:11 } },
+            { text: String(value), font:{ name:"Aptos Narrow", size:11 } },
           ]}
         : label
 
       cell.alignment = { horizontal:"left", vertical:"top", wrapText:true }
       cell.border = border(true, false, j === 0, j === 1)
-      ws.getRow(row).height = calcHeight(value)
+      ws.getRow(row).height = calcHeight(plainText)
     })
   }
 
