@@ -150,7 +150,8 @@ export async function exportEvaluationToExcel(result, title = "Exchange 1") {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = `eval-${Date.now()}.xlsx`
+  const safeName = title.replace(/[^a-z0-9\-_\s]/gi, "").trim() || "eval"
+  a.download = `${safeName}.xlsx`
   a.click()
   URL.revokeObjectURL(url)
 }
