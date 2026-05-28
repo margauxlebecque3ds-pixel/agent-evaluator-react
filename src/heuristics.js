@@ -14,6 +14,7 @@ export const HEURISTICS = [
 export function scoreMeta(score) {
   if (score === null || score === undefined) return { color: "var(--neutral)", bg: "rgba(148,163,184,0.15)", border: "var(--neutral)" }
   if (score === 5) return { color: "var(--success)", bg: "rgba(52,211,153,0.15)", border: "var(--success)" }
+  if (score >= 4) return { color: "var(--success)", bg: "rgba(52,211,153,0.15)", border: "var(--success)" }
   if (score >= 3) return { color: "var(--warning)", bg: "rgba(251,191,36,0.15)", border: "var(--warning)" }
   return { color: "var(--danger)", bg: "rgba(248,113,113,0.15)", border: "var(--danger)" }
 }
