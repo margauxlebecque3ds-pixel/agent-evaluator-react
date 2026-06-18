@@ -50,8 +50,8 @@ def evaluate_single(req: SingleRequest):
 @app.post("/evaluate/multi")
 def evaluate_multi(req: MultiRequest):
     if req.api_key:
-        os.environ["FOUNDATION_MODEL_KEY"] = req.api_key
-        # os.environ["MISTRAL_API_KEY"] = req.api_key
+        # os.environ["FOUNDATION_MODEL_KEY"] = req.api_key
+        os.environ["MISTRAL_API_KEY"] = req.api_key
     result = evaluate_response(
         "", "",
         language=req.language,
