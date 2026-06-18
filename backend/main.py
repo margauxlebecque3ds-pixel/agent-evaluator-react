@@ -30,7 +30,7 @@ ALL_HEURISTICS = [
 def call_main_agent(prompt):
     response = client.chat.completions.create(
         # model="openai/gpt-oss-120b",
-        model="mistral-large-latest"
+        model="mistral-large-latest",
         messages=[
             {"role": "system", "content": "You are an expert assistant."},
             {"role": "user", "content": prompt}
@@ -389,7 +389,7 @@ STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA 
 
     evaluation = client.chat.completions.create(
         # model="openai/gpt-oss-120b",
-        model="mistral-large-latest"
+        model="mistral-large-latest",
         messages=[
             {"role": "system", "content": "You are a senior UX researcher evaluating AI agents in industrial software. You respond only in valid JSON."},
             {"role": "user", "content": evaluation_prompt}
