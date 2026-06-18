@@ -4,15 +4,15 @@ from openai import OpenAI
 import os
 import re, json
 
-# client = OpenAI(
-#     api_key=os.getenv("MISTRAL_API_KEY"),
-#     base_url="https://api.mistral.ai/v1"
-# )
-
 client = OpenAI(
-    api_key="FOUNDATION_API_KEY",
-    base_url="https://fmgateway.proxem.dsone.3ds.com/v1"
+    api_key=os.getenv("MISTRAL_API_KEY"),
+    base_url="https://api.mistral.ai/v1"
 )
+
+# client = OpenAI(
+#     api_key="FOUNDATION_API_KEY",
+#     base_url="https://fmgateway.proxem.dsone.3ds.com/v1"
+# )
 
 ALL_HEURISTICS = [
     "request_adequacy",
@@ -29,8 +29,8 @@ ALL_HEURISTICS = [
 
 def call_main_agent(prompt):
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        # model="mistral-large-latest"
+        # model="openai/gpt-oss-120b",
+        model="mistral-large-latest"
         messages=[
             {"role": "system", "content": "You are an expert assistant."},
             {"role": "user", "content": prompt}
@@ -388,8 +388,8 @@ STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA 
 """
 
     evaluation = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        # model="mistral-large-latest"
+        # model="openai/gpt-oss-120b",
+        model="mistral-large-latest"
         messages=[
             {"role": "system", "content": "You are a senior UX researcher evaluating AI agents in industrial software. You respond only in valid JSON."},
             {"role": "user", "content": evaluation_prompt}
