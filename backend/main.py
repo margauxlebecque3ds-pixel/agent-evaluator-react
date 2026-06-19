@@ -3,6 +3,8 @@ load_dotenv()
 from openai import OpenAI
 import os
 import re, json
+import httpx
+
 
 # client = OpenAI(
 #     api_key=os.getenv("MISTRAL_API_KEY"),
@@ -10,8 +12,9 @@ import re, json
 # )
 
 client = OpenAI(
-    api_key="FOUNDATION_API_KEY",
-    base_url="https://fmgateway.proxem.dsone.3ds.com/v1"
+    api_key=os.getenv("FOUNDATION_API_KEY"),
+    base_url="https://fmgateway.proxem.dsone.3ds.com/v1",
+    http_client=httpx.Client(verify="E:\Downloads\DownloadOfBSFR428\win_b64\webroot\WEB-INF\classes\certificates\ExaleadRootCAG2-chain.crt")
 )
 
 ALL_HEURISTICS = [
@@ -29,7 +32,9 @@ ALL_HEURISTICS = [
 
 def call_main_agent(prompt):
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        # model="openai/gpt-oss-120b",
+        model="mistralai/Devstral-Small-2-24B-Instruct-2512",
+        # model="mistralai/Ministral-3-8B-Reasoning-2512",
         # model="mistral-large-latest",
         messages=[
             {"role": "system", "content": "You are an expert assistant."},
@@ -87,7 +92,7 @@ def analyze_interface_image(image_b64):
     except Exception as e:
         return "Image analysis unavailable: " + str(e)
 
-def build_json_template(active_heuristics, has_image=False, mode="single"):
+def build_json_template(active_heuristics, has_image=False, has_interface_comment=False, mode="single"):
     """Build the JSON output template dynamically based on active heuristics."""
     always_na = {
         "interoperability": "Not applicable: no external data required.",
@@ -105,10 +110,10 @@ def build_json_template(active_heuristics, has_image=False, mode="single"):
         elif key == "interoperability":
             parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: no external data required.", "improvement_advice": "N/A"}}'
         elif key == "interface_and_3d_model_relationship":
-            if has_image:
-                parts[key] = f'"{key}": {{"score": 0, "applicable": true, "justification": "Based on the screenshot analysis provided.", "improvement_advice": "..."}}'
+            if has_image or has_interface_comment:
+                parts[key] = f'"{key}": {{"score": 0, "applicable": true, "justification": "Based on the interface context provided (screenshot and/or description).", "improvement_advice": "..."}}'
             else:
-                parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: no screenshot or 3D context provided.", "improvement_advice": "N/A"}}'
+                parts[key] = f'"{key}": {{"score": null, "applicable": false, "justification": "Not applicable: no screenshot or interface context provided.", "improvement_advice": "N/A"}}'
         else:
             parts[key] = f'"{key}": {{"score": 0, "applicable": true, "justification": "...", "improvement_advice": "..."}}'
 
@@ -202,6 +207,8 @@ def evaluate_response(prompt, response_text, language="en", mode="single", conve
 
     focus_instruction = build_focus_instruction(active_heuristics)
     has_image = bool(image_b64)
+    interface_keywords = ["interface", "3d view", "highlight", "annotation", "screen", "tree", "model view", "selected", "click", "button"]
+    has_interface_comment = bool(user_comment) and any(kw in user_comment.lower() for kw in interface_keywords)
 
     if mode == "single":
         comment_text = ""
@@ -213,7 +220,7 @@ def evaluate_response(prompt, response_text, language="en", mode="single", conve
             image_analysis = analyze_interface_image(image_b64)
             image_analysis_text = "\n\nINTERFACE SCREENSHOT ANALYSIS (use for Criterion 8):\n" + image_analysis + "\n\nCriterion 8 IS NOW APPLICABLE."
 
-        json_template = build_json_template(active_heuristics, has_image=has_image, mode="single")
+        json_template = build_json_template(active_heuristics, has_image=has_image, has_interface_comment=has_interface_comment, mode="single")
 
         evaluation_prompt = f"""
 {SIMULIA_CONTEXT}
@@ -325,7 +332,7 @@ STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO
 
         conversation_formatted = format_conversation_for_prompt(exchanges)
         n_exchanges = len(exchanges) // 2
-        json_template = build_json_template(active_heuristics, has_image=has_image, mode="multi")
+        json_template = build_json_template(active_heuristics, has_image=has_image, has_interface_comment=has_interface_comment, mode="multi")
 
         evaluation_prompt = f"""
 {SIMULIA_CONTEXT}
@@ -388,7 +395,9 @@ STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA 
 """
 
     evaluation = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        # model="openai/gpt-oss-120b",
+        model="mistralai/Devstral-Small-2-24B-Instruct-2512",
+        # model="mistralai/Ministral-3-8B-Reasoning-2512",
         # model="mistral-large-latest",
         messages=[
             {"role": "system", "content": "You are a senior UX researcher evaluating AI agents in industrial software. You respond only in valid JSON."},

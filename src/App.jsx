@@ -109,16 +109,18 @@ export default function App() {
     setResultBoth(null)
 
     try {
-      const [rEn, rFr] = await Promise.all([
-        mode === "single"
-          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en", activeHeuristics })
-          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "en", activeHeuristics }),
-        mode === "single"
-          ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "fr", activeHeuristics })
-          : evaluateMulti({ conversation, comment: comment || undefined, images, language: "fr", activeHeuristics }),
-      ])
-
-      const both = { en: rEn, fr: rFr }
+      const rEn = mode === "single"
+        ? await evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en", activeHeuristics })
+        : await evaluateMulti({ conversation, comment: comment || undefined, images, language: "en", activeHeuristics })
+      const both = { en: rEn, fr: rEn }
+      // const [rEn, rFr] = await Promise.all([
+      //   mode === "single"
+      //     ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "en", activeHeuristics })
+      //     : evaluateMulti({ conversation, comment: comment || undefined, images, language: "en", activeHeuristics }),
+      //   mode === "single"
+      //     ? evaluateSingle({ userQuestion, leoResponse, comment: comment || undefined, images, language: "fr", activeHeuristics })
+      //     : evaluateMulti({ conversation, comment: comment || undefined, images, language: "fr", activeHeuristics }),
+      // ])
 
       const avgScore = (() => {
         const scores = (rEn.criteria || []).map(c => c.score).filter(s => s !== null && s !== undefined)

@@ -1,4 +1,5 @@
-export const API_BASE = "https://agent-evaluator-react.onrender.com"
+// export const API_BASE = "https://agent-evaluator-react.onrender.com"
+export const API_BASE = "http://localhost:8000"
 
 async function imagesToBase64(files) {
   return Promise.all(
