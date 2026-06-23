@@ -123,7 +123,7 @@ def build_json_template(active_heuristics, has_image=False, mode="single"):
         parts[first_active] = f'"{first_active}": {{"score": 0, "applicable": true, "justification": "2-3 sentences, analytical, SIMULIA context, no quotes, no technical data.", "improvement_advice": "[HIGH] Title — \\"short quote\\" → UX problem.\\n[MEDIUM] Title — \\"short quote\\" → UX gap.\\n[LOW] Title — \\"quote\\" → Minor UX polish."}}'
 
     lines = [f"    {v}" for v in parts.values()]
-    return '{{\n  "evaluation": {{\n' + ',\n'.join(lines) + '\n  }},\n  "global_improvement_suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]\n}}'
+    return '{{\n  "evaluation": {{\n' + ',\n'.join(lines) + '\n  }},\n  "global_improvement_suggestions": ""\n}}'
 
 def build_focus_instruction(active_heuristics):
     if not active_heuristics:
@@ -320,7 +320,28 @@ AGENT RESPONSE: {response_text}
 
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {json_template}
-STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
+
+STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. 
+
+GLOBAL SUMMARY FORMAT — MANDATORY:
+Generate a structured summary of 8-12 lines following this exact format:
+
+✅ Strengths
+H[N] — [Criterion Name] ([score]/5): One sentence explaining what LEO did well on this criterion, based on the justification already given. Include only criteria scored 4 or 5.
+
+⚠️ Areas to improve  
+H[N] — [Criterion Name] ([score]/5): One sentence explaining the main UX gap identified, based on the justification already given. Include only criteria scored 1 or 2.
+
+STRICT RULES for global summary:
+- Base ONLY on what was already said in the individual criteria — do not invent new observations
+- NO technical content — stay 100% in UX territory
+- If no criteria scored 4-5, write "No major strengths identified on this exchange."
+- If no criteria scored 1-2, write "No critical gaps identified on this exchange."
+
+Respond ONLY with JSON.
+
+
+
 """
 
     else:
@@ -388,7 +409,26 @@ APPLICABLE for multi-exchange conversations.
 
 OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 {json_template}
-STRICT RULES: justification = 2-3 sentences max, cite exchange numbers, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] format, arrow = UX gap NOT technical rewrite, NEVER invent numerical values. Respond ONLY with JSON.
+
+STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. 
+
+GLOBAL SUMMARY FORMAT — MANDATORY:
+Generate a structured summary of 8-12 lines following this exact format:
+
+✅ Strengths
+H[N] — [Criterion Name] ([score]/5): One sentence explaining what LEO did well on this criterion, based on the justification already given. Include only criteria scored 4 or 5.
+
+⚠️ Areas to improve  
+H[N] — [Criterion Name] ([score]/5): One sentence explaining the main UX gap identified, based on the justification already given. Include only criteria scored 1 or 2.
+
+STRICT RULES for global summary:
+- Base ONLY on what was already said in the individual criteria — do not invent new observations
+- NO technical content — stay 100% in UX territory
+- If no criteria scored 4-5, write "No major strengths identified on this exchange."
+- If no criteria scored 1-2, write "No critical gaps identified on this exchange."
+
+Respond ONLY with JSON.
+
 - ⚠️ FINAL WARNING: The evaluator is a UX researcher, NOT an engineer. Any numerical value, material name, or technical specification in improvement_advice is a CRITICAL ERROR. Write ONLY about interaction design.
 """
 

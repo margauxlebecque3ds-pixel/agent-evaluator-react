@@ -1,7 +1,7 @@
 import { useRef } from "react"
 import {
   MessageSquare, MessagesSquare, Play, Loader2, RotateCcw,
-  Download, Sparkles, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp
+  Download, Sparkles, AlertTriangle, ArrowUpRight, ChevronDown, ChevronUp, Copy
 } from "lucide-react"
 import { useState } from "react"
 import { exportEvaluationToExcel } from "../export"
@@ -291,9 +291,17 @@ export default function HomePage({
 
             {result.global_suggestions && (
               <div style={{ marginTop: 20, borderRadius: 20, padding: 24, background: "linear-gradient(135deg, color-mix(in oklab, var(--primary) 14%, transparent), transparent)", border: "1px solid color-mix(in oklab, var(--primary) 35%, transparent)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <Sparkles size={16} style={{ color: "var(--primary)" }} />
-                  <h3 style={{ fontWeight: 700, fontSize: "1.1rem" }}>{t.globalSuggestions}</h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Sparkles size={16} style={{ color: "var(--primary)" }} />
+                    <h3 style={{ fontWeight: 700, fontSize: "1.1rem" }}>{t.globalSuggestions}</h3>
+                  </div>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(result.global_suggestions)}
+                    className="btn-ghost"
+                    style={{ borderRadius: 999, padding: "4px 12px", fontSize: "0.75rem" }}>
+                    <Copy size={12} /> Copy
+                  </button>
                 </div>
                 <p style={{ fontSize: "0.88rem", lineHeight: 1.7, color: "var(--fg2)", whiteSpace: "pre-wrap" }}>{result.global_suggestions}</p>
               </div>
