@@ -64,7 +64,9 @@ function normalize(raw) {
       criteria,
       global_suggestions: Array.isArray(data.global_improvement_suggestions)
         ? data.global_improvement_suggestions.join("\n• ")
-        : (data.global_suggestions || ""),
+        : (typeof data.global_improvement_suggestions === "string" 
+          ? data.global_improvement_suggestions 
+          : (data.global_suggestions || "")),
     }
   }
 
