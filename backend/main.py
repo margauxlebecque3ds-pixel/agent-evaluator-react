@@ -324,19 +324,24 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. 
 
 GLOBAL SUMMARY FORMAT — MANDATORY:
-Generate a structured summary of 8-12 lines following this exact format:
+Generate a structured summary following this exact format:
 
 ✅ Strengths
-H[N] — [Criterion Name] ([score]/5): One sentence explaining what LEO did well on this criterion, based on the justification already given. Include only criteria scored 4 or 5.
+List ALL criteria scored 4 or 5 — one line each:
+H[N] — [Criterion Name] ([score]/5): One sentence on what LEO did well, based only on the justification already given.
+If no criteria scored 4-5: write "No major strengths identified on this exchange."
 
-⚠️ Areas to improve  
-H[N] — [Criterion Name] ([score]/5): One sentence explaining the main UX gap identified, based on the justification already given. Include only criteria scored 1 or 2.
+⚠️ Top 3 priorities to improve
+List ONLY the 3 lowest-scoring applicable criteria — prioritize scores 1 and 2 first, then 3 if needed:
+H[N] — [Criterion Name] ([score]/5): One sentence on the main UX gap, based only on the justification already given.
+If no criteria scored below 4: write "No critical gaps identified on this exchange."
 
 STRICT RULES for global summary:
-- Base ONLY on what was already said in the individual criteria — do not invent new observations
+- Strengths = ALL criteria scored 4 or 5, no exception
+- Priorities = maximum 3 criteria, lowest scores first
+- Base ONLY on what was already said in individual criteria
 - NO technical content — stay 100% in UX territory
-- If no criteria scored 4-5, write "No major strengths identified on this exchange."
-- If no criteria scored 1-2, write "No critical gaps identified on this exchange."
+- NO new observations invented
 
 Respond ONLY with JSON.
 
@@ -413,19 +418,24 @@ OUTPUT — STRICTLY VALID JSON — NO EXTRA TEXT:
 STRICT RULES: justification = 2-3 sentences max, analytical, SIMULIA context, NO quotes, NO technical data. improvement_advice = [HIGH]/[MEDIUM]/[LOW] bullets, arrow explains UX gap NOT a technical rewrite, NEVER invent numerical values. 
 
 GLOBAL SUMMARY FORMAT — MANDATORY:
-Generate a structured summary of 8-12 lines following this exact format:
+Generate a structured summary following this exact format:
 
 ✅ Strengths
-H[N] — [Criterion Name] ([score]/5): One sentence explaining what LEO did well on this criterion, based on the justification already given. Include only criteria scored 4 or 5.
+List ALL criteria scored 4 or 5 — one line each:
+H[N] — [Criterion Name] ([score]/5): One sentence on what LEO did well, based only on the justification already given.
+If no criteria scored 4-5: write "No major strengths identified on this exchange."
 
-⚠️ Areas to improve  
-H[N] — [Criterion Name] ([score]/5): One sentence explaining the main UX gap identified, based on the justification already given. Include only criteria scored 1 or 2.
+⚠️ Top 3 priorities to improve
+List ONLY the 3 lowest-scoring applicable criteria — prioritize scores 1 and 2 first, then 3 if needed:
+H[N] — [Criterion Name] ([score]/5): One sentence on the main UX gap, based only on the justification already given.
+If no criteria scored below 4: write "No critical gaps identified on this exchange."
 
 STRICT RULES for global summary:
-- Base ONLY on what was already said in the individual criteria — do not invent new observations
+- Strengths = ALL criteria scored 4 or 5, no exception
+- Priorities = maximum 3 criteria, lowest scores first
+- Base ONLY on what was already said in individual criteria
 - NO technical content — stay 100% in UX territory
-- If no criteria scored 4-5, write "No major strengths identified on this exchange."
-- If no criteria scored 1-2, write "No critical gaps identified on this exchange."
+- NO new observations invented
 
 Respond ONLY with JSON.
 
